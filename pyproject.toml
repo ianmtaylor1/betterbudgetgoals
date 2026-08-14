@@ -1,0 +1,13 @@
+[project]
+name = "betterbudgetgoals"
+description = "Reference implementation of a better template allocation algorithm for Actual Budget."
+version = "0.1.0"
+authors = [
+    { name = "Ian Taylor", email = "ian.m.taylor1@gmail.com" }
+]
+dependencies = [
+]
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
