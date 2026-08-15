@@ -1,5 +1,8 @@
+from dataclasses import dataclass
+
 # I know you shouldn't use floats for currency. This is a proof of concept.
 
+@dataclass
 class ImmediateGoal:
     """
     Templates that tell you exactly how much to put in the category this month, 
@@ -12,11 +15,11 @@ class ImmediateGoal:
     * Average type
     * Copy type
     """
-    def __init__(self, amount: float, category: str, name: str = ""):
-        self.amount = amount 
-        self.category = category
-        self.name = name
+    amount: float
+    category: str
+    name: str = ""
 
+@dataclass
 class GradualGoal:
     """
     Templates that steadily contribute for a large future expense within a category,
@@ -26,29 +29,29 @@ class GradualGoal:
     * By type
     * Schedule type (without 'full')
     """
-    def __init__(self, month: int, amount:float, category: str, name: str = "", spend: float = 0.0):
-        self.month = month
-        self.amount = amount
-        self.category = category
-        self.spend = spend # Spent already within the "spend from" directive
-        self.name = name
+    month: int
+    amount: float
+    category: str
+    name: str = ""
+    spend: float = 0.0
 
+@dataclass
 class CategoryLimit:
     """
     Represents a limit placed on a category's balance due to an 'up to' clause.
     """
-    def __init__(self, amount: float, category: str, name: str = ""):
-        self.amount = amount 
-        self.category = category
-        self.name = name
+    amount: float
+    category: str
+    name: str = ""
 
+@dataclass
 class RemainderGoal:
     """
     Remainder type templates, since they are run separately in their own pass.
     """
-    def __init__(self, weight: int, category: str):
-        self.weight = weight
-        self.category = category
+    weight: int
+    category: str
+    name: str = ""
 
 def gradual_contribution_amounts(
         gradual_goals: list[GradualGoal], 
