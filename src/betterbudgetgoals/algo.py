@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from .month import YearMonth
 
 # I know you shouldn't use floats for currency. This is a proof of concept.
 
@@ -29,7 +30,7 @@ class GradualGoal:
     * By type
     * Schedule type (without 'full')
     """
-    month: int
+    month: YearMonth
     amount: float
     category: str
     name: str = ""
@@ -55,7 +56,7 @@ class RemainderGoal:
 
 def gradual_contribution_amounts(
         gradual_goals: list[GradualGoal], 
-        current_month: int, 
+        current_month: YearMonth, 
         category_amounts: dict[str, float]) -> tuple[dict[str,float], dict[str,float]]:
     """Calculate the contribution amount for each category based for gradual goals.
     Uses the "rubber band"/"shadow cast" method to calculate the contribution amounts."""
@@ -107,20 +108,20 @@ def contribution_amounts(
 if __name__ == "__main__":
     # TODO: set up test example with all same category for sanity test
     gradual_goals = [
-        GradualGoal(7, 300, "A"),
-        GradualGoal(8, 400, "A"),
-        GradualGoal(10, 100, "A")
+        GradualGoal(YearMonth(2026,7), 300, "A"),
+        GradualGoal(YearMonth(2026,8), 400, "A"),
+        GradualGoal(YearMonth(2026,10), 100, "A")
     ]
-    current_month = 4
+    current_month = YearMonth(2026,4)
     current_amounts = {"A":100}
     print(gradual_contribution_amounts(gradual_goals, current_month, current_amounts))
     # TODO: set up test example with all different categories
     gradual_goals = [
-            GradualGoal(7, 300, "A"),
-            GradualGoal(8, 400, "B"),
-            GradualGoal(10, 100, "C")
-        ]
-    current_month = 4
+        GradualGoal(YearMonth(2026,7), 300, "A"),
+        GradualGoal(YearMonth(2026,8), 400, "A"),
+        GradualGoal(YearMonth(2026,10), 100, "A")
+    ]
+    current_month = YearMonth(2026,4)
     current_amounts = {"A":50, "B":50}
     print(gradual_contribution_amounts(gradual_goals, current_month, current_amounts))
     # TODO: run test examples over time to see how contributions change.
