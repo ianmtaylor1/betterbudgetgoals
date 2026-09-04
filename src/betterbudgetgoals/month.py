@@ -19,6 +19,12 @@ class YearMonth:
         else:
             return NotImplemented
 
+    def __contains__(self, other) -> bool:
+        if isinstance(other, date):
+            return (other.year == self.year) and (other.month == self.month)
+        else:
+            return NotImplemented
+
     @classmethod
     def from_date(cls, d: date):
         return cls(d.year, d.month)

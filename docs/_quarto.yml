@@ -3,6 +3,7 @@ project:
 
 website:
   title: "Documentation"
+  page-navigation: true
   navbar:
     left:
       - href: index.qmd
