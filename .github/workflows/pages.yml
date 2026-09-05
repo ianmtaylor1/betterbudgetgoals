@@ -3,7 +3,7 @@ name: Deploy documentation to Pages
 
 env:
   quarto_version: 1.10.18
-  python_version: '3.x'
+  python_version: '3.14'
 
 on:
   # Runs on pushes targeting the default branch
@@ -35,7 +35,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
+      - name: Install Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.python_version }}
+      
+      - name: Install local package
+        run: pip install .
+
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
