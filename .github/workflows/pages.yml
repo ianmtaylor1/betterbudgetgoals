@@ -42,7 +42,7 @@ jobs:
           python-version: ${{ env.python_version }}
       
       - name: Install local package
-        run: pip install .
+        run: pip install .[docs]
 
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
