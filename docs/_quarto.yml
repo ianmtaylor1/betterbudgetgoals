@@ -4,11 +4,12 @@ project:
 website:
   title: "Documentation"
   page-navigation: true
-  navbar:
-    left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
+  sidebar:
+    contents:
+      - index.qmd
+      - basics.qmd
+      - details.qmd
+      - full.qmd
 
 format:
   html:
