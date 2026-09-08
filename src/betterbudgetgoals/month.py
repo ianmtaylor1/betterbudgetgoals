@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import` date
+from datetime import date
 
 @dataclass(order=True)
 class YearMonth:
@@ -13,9 +13,19 @@ class YearMonth:
     def __str__(self):
         return f"{self.year}-{self.month:02d}"
 
-    def __sub__(self, other) -> int:
+    def __sub__(self, other: YearMonth | int) -> int | YearMonth:
         if isinstance(other, YearMonth):
             return 12 * (other.year - self.year) + other.month - self.month
+        elif isinstance(other, int):
+            return self + (-other)
+        else:
+            return NotImplemented
+
+    def __add__(self, other: int) -> YearMonth:
+        if isinstance(other, int):
+            month = (self.month - 1 + other) % 12 + 1
+            year = self.year + (self.month - 1 + other) // 12
+            return YearMonth(year, month)
         else:
             return NotImplemented
 
@@ -35,5 +45,5 @@ class YearMonth:
         assert len(pieces) == 2
         return cls(int(pieces[0]), int(pieces[1]))
 
-    def day(d: int):
+    def day(self, d: int):
         return date(self.year, self.month, d)
