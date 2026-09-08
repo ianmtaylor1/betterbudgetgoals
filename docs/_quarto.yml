@@ -2,7 +2,7 @@ project:
   type: website
 
 website:
-  title: "Documentation"
+  title: "Better Budget Goals"
   page-navigation: true
   sidebar:
     contents:

@@ -1,24 +1,100 @@
 ---
-title: "Documentation"
+title: "Introduction"
 ---
 
-This is a Quarto website.
+## Background
 
-## Subsection
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+## The Problem
 
-### This is a subsubsection
+When you put multiple long-term goals into one category, the resulting behavior is a bit weird. Let's consider an example.
 
-## Second subsection
+> It's the beginning of Apil of 2026. You have a $100 balance in a spending category. There are three upcoming expenses in that category you want to save up for:
+> 
+> - In July, you need to pay $300.
+> - In August, you need to pay $400.
+> - In October, you need to pay $100.
+
+You might translate these goals into the following three templates:
+
+```
+#template 300 by 2026-07
+#template 400 by 2026-08
+#template 100 by 2026-10
+```
+
+With these three templates, @tbl-actual-current shows what happens over the next 7 months.
 
 ```{python}
+#| label: tbl-actual-current
+#| echo: false
+#| tbl-cap: "The results of having the three 'by' templates in a single category as of Actual Budget v26.9.0."
 
 import pandas as pd
 from IPython.display import Markdown
 from tabulate import tabulate
+from betterbudgetgoals.month import YearMonth
 
-df = pd.DataFrame({"A":[1,2,3],"B":[4,5,6]})
-Markdown(tabulate(df, headers="keys", showindex=False, tablefmt="grid"))
+startmonth = YearMonth(2026,4)
+startbalance = 100
 
+current = pd.DataFrame(
+    {"Month":[startmonth + i for i in range(7)],
+    "Contribution":[144.29, 135.24, 113.57, 31.90, 208.33, 33.34, 33.33],
+    "Expenses":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0]}
+)
+current["Balance"] = (current["Contribution"] - current["Expenses"]).cumsum() + startbalance
+
+Markdown(tabulate(current, headers="keys", showindex=False, floatfmt=".2f"))
 ```
+
+This works, in the sense that the category balance is never overdrawn and the balance is zero after all planned expenses. But he contribution amounts are inconsistent and counterintuitive month-to-month.
+
+If someone were saving for these expenses manually, the simplest way would be to divide the amount of each expense by the number of months leading up to it (including the current month and the month of the expense), and contribute that same amount per month. I call this the *naïve* algorithm. @tbl-naive shows how the naïve algorithm would play out in this scenario.
+
+
+```{python}
+#| label: tbl-naive
+#| echo: false
+#| tbl-cap: "The results of using the naïve amount divided by time algorithm to save for the three upcoming expenses."
+
+import pandas as pd
+from IPython.display import Markdown
+from tabulate import tabulate
+from betterbudgetgoals.month import YearMonth
+
+startmonth = YearMonth(2026,4)
+startbalance = 100
+
+save_goal1 = (300 - startbalance) / 4
+save_goal2 = 400 / 5
+save_goal3 = 100 / 7
+
+naive = pd.DataFrame(
+    {"Month":[startmonth + i for i in range(7)],
+    "Contribution":[
+        save_goal1+save_goal2+save_goal3, 
+        save_goal1+save_goal2+save_goal3, 
+        save_goal1+save_goal2+save_goal3,  
+        save_goal1+save_goal2+save_goal3, 
+        save_goal2+save_goal3, 
+        save_goal3, 
+        save_goal3],
+    "Expenses":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0]}
+)
+naive["Balance"] = (naive["Contribution"] - naive["Expenses"]).cumsum() + startbalance
+
+Markdown(tabulate(naive, headers="keys", showindex=False, floatfmt=".2f"))
+```
+
+The values in this table result from counting the 100 already in the category towards the first goal and saving `{python} format(save_goal1, ".2f")` per month for the first goal, `{python} format(save_goal2, ".2f")` per month for the second goal, and `{python} format(save_goal3, ".2f")` per month for the third goal. These values are generally more intuitive for people -- more money is put aside each month initially, then less as each goal passes. And I think they are preferred by people because they are more consistent month-to-month and avoid sudden large contributions in a month.
+
+Behavior similar to the naïve algorithm can be forced in Actual Budget by simply splitting long-term savings goals into their own categories. [... why might people not want to do this ...].
+
+
+
+## The solution
+
+
+## Outline
+
