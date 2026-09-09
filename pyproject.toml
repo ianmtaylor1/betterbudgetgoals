@@ -12,6 +12,7 @@ dependencies = [
 docs = [
     "ipython",
     "jupyter",
+    "matplotlib",
     "pandas",
     "tabulate",
 ]

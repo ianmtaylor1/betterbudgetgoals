@@ -9,6 +9,8 @@ title: "Introduction"
 import pandas as pd
 from IPython.display import Markdown
 from tabulate import tabulate
+import matplotlib.pyplot as plt
+
 from betterbudgetgoals.month import YearMonth
 from betterbudgetgoals.algo import GradualGoal, contribution_amounts
 
@@ -131,6 +133,24 @@ for i in range(better.shape[0]):
 
 Markdown(tabulate(better, headers="keys", showindex=False, floatfmt=".2f"))
 
+```
+
+```{python}
+#| label: fig-contributions
+#| echo: false
+#| fig-cap: Contribution amounts per month for each algorithm from 2026-04 to 2026-10. The current Actual Budget algorithm results in erratic contribution amounts. The naïve algorithm is better in that regard, but the proposed algorithm has the most consistent contribution amounts and the smallest maximum contribution amount required to meet all three goals.
+
+series = pd.DataFrame(
+    {"Current": current["Contribution"],
+    "Naïve": naive["Contribution"],
+    "Proposed": better["Contribution"]}
+)
+labels = better["Month"]
+
+plt.grouped_bar(series, tick_labels=labels)
+plt.legend(loc="upper right")
+plt.title("Monthly Contributions for Each Algorithm")
+plt.show()
 ```
 
 ## The solution
