@@ -2,6 +2,18 @@
 title: "Introduction"
 ---
 
+```{python}
+#| label: setup
+#| include: false
+
+import pandas as pd
+from IPython.display import Markdown
+from tabulate import tabulate
+from betterbudgetgoals.month import YearMonth
+from betterbudgetgoals.algo import GradualGoal, contribution_amounts
+
+```
+
 ## Background
 
 
@@ -30,11 +42,6 @@ With these three templates, @tbl-actual-current shows what happens over the next
 #| echo: false
 #| tbl-cap: "The results of having the three 'by' templates in a single category as of Actual Budget v26.9.0."
 
-import pandas as pd
-from IPython.display import Markdown
-from tabulate import tabulate
-from betterbudgetgoals.month import YearMonth
-
 startmonth = YearMonth(2026,4)
 startbalance = 100
 
@@ -48,7 +55,7 @@ current["Balance"] = (current["Contribution"] - current["Expenses"]).cumsum() + 
 Markdown(tabulate(current, headers="keys", showindex=False, floatfmt=".2f"))
 ```
 
-This works, in the sense that the category balance is never overdrawn and the balance is zero after all planned expenses. But he contribution amounts are inconsistent and counterintuitive month-to-month.
+This works, in the sense that the total contributed amount over 7 months is $700 (the total of all goals minus the initial balance) and the category balance is never overdrawn. But he contribution amounts are inconsistent and counterintuitive month-to-month.
 
 If someone were saving for these expenses manually, the simplest way would be to divide the amount of each expense by the number of months leading up to it (including the current month and the month of the expense), and contribute that same amount per month. I call this the *naïve* algorithm. @tbl-naive shows how the naïve algorithm would play out in this scenario.
 
@@ -57,11 +64,6 @@ If someone were saving for these expenses manually, the simplest way would be to
 #| label: tbl-naive
 #| echo: false
 #| tbl-cap: "The results of using the naïve amount divided by time algorithm to save for the three upcoming expenses."
-
-import pandas as pd
-from IPython.display import Markdown
-from tabulate import tabulate
-from betterbudgetgoals.month import YearMonth
 
 startmonth = YearMonth(2026,4)
 startbalance = 100
@@ -91,7 +93,45 @@ The values in this table result from counting the 100 already in the category to
 
 Behavior similar to the naïve algorithm can be forced in Actual Budget by simply splitting long-term savings goals into their own categories. [... why might people not want to do this ...].
 
+```{python}
+#| label: tbl-better
+#| echo: false
+#| tbl-cap: "A series of contributions that meets all three spending goals while being more consistent than either the default Actual Budget behavior or the naïve algorithm."
 
+startmonth = YearMonth(2026,4)
+startbalance = 100
+
+better = pd.DataFrame(
+    {"Month":[startmonth + i for i in range(7)],
+    "Contribution":[0.0] * 7,
+    "Expenses":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0],
+    "Balance": [0.0] * 7}
+)
+
+goals = [
+    GradualGoal(YearMonth(2026,7), 300, "spending"),
+    GradualGoal(YearMonth(2026,8), 400, "spending"),
+    GradualGoal(YearMonth(2026,10), 100, "spending")
+]
+
+balance = startbalance
+for i in range(better.shape[0]):
+    month = better.loc[i,"Month"]
+    contrib = contribution_amounts(
+        [g for g in goals if g.month >= month], 
+        [], 
+        month, 
+        {"spending":balance},
+        []
+    )[0]["spending"]
+    better.loc[i,"Contribution"] = contrib
+    balance += contrib - better.loc[i,"Expenses"]
+    better.loc[i,"Balance"] = balance
+
+
+Markdown(tabulate(better, headers="keys", showindex=False, floatfmt=".2f"))
+
+```
 
 ## The solution
 
