@@ -88,7 +88,7 @@ def gradual_contribution_amounts(
 def contribution_amounts(
         gradual_goals: list[GradualGoal], 
         immediate_goals: list[ImmediateGoal], 
-        current_month: int, 
+        current_month: YearMonth, 
         category_amounts: dict[str, float],
         category_limits: list[CategoryLimit]) -> tuple[dict[str,float], dict[str,float]]:
     # Calculate gradual goals, then add on immediate goals.

@@ -15,7 +15,7 @@ class YearMonth:
 
     def __sub__(self, other: YearMonth | int) -> int | YearMonth:
         if isinstance(other, YearMonth):
-            return 12 * (other.year - self.year) + other.month - self.month
+            return 12 * (self.year - other.year) + self.month - other.month
         elif isinstance(other, int):
             return self + (-other)
         else:
