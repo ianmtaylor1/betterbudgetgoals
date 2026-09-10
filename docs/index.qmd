@@ -49,10 +49,10 @@ startbalance = 100
 
 current = pd.DataFrame(
     {"Month":[startmonth + i for i in range(7)],
-    "Contribution":[144.29, 135.24, 113.57, 31.90, 208.33, 33.34, 33.33],
-    "Expenses":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0]}
+    "Budgeted":[144.29, 135.24, 113.57, 31.90, 208.33, 33.34, 33.33],
+    "Spent":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0]}
 )
-current["Balance"] = (current["Contribution"] - current["Expenses"]).cumsum() + startbalance
+current["Balance"] = (current["Budgeted"] - current["Spent"]).cumsum() + startbalance
 
 Markdown(tabulate(current, headers="keys", showindex=False, floatfmt=".2f"))
 ```
@@ -76,7 +76,7 @@ save_goal3 = 100 / 7
 
 naive = pd.DataFrame(
     {"Month":[startmonth + i for i in range(7)],
-    "Contribution":[
+    "Budgeted":[
         save_goal1+save_goal2+save_goal3, 
         save_goal1+save_goal2+save_goal3, 
         save_goal1+save_goal2+save_goal3,  
@@ -84,9 +84,9 @@ naive = pd.DataFrame(
         save_goal2+save_goal3, 
         save_goal3, 
         save_goal3],
-    "Expenses":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0]}
+    "Spent":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0]}
 )
-naive["Balance"] = (naive["Contribution"] - naive["Expenses"]).cumsum() + startbalance
+naive["Balance"] = (naive["Budgeted"] - naive["Spent"]).cumsum() + startbalance
 
 Markdown(tabulate(naive, headers="keys", showindex=False, floatfmt=".2f"))
 ```
@@ -105,8 +105,8 @@ startbalance = 100
 
 better = pd.DataFrame(
     {"Month":[startmonth + i for i in range(7)],
-    "Contribution":[0.0] * 7,
-    "Expenses":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0],
+    "Budgeted":[0.0] * 7,
+    "Spent":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0],
     "Balance": [0.0] * 7}
 )
 
@@ -126,8 +126,8 @@ for i in range(better.shape[0]):
         {"spending":balance},
         []
     )[0]["spending"]
-    better.loc[i,"Contribution"] = contrib
-    balance += contrib - better.loc[i,"Expenses"]
+    better.loc[i,"Budgeted"] = contrib
+    balance += contrib - better.loc[i,"Spent"]
     better.loc[i,"Balance"] = balance
 
 
@@ -141,9 +141,9 @@ Markdown(tabulate(better, headers="keys", showindex=False, floatfmt=".2f"))
 #| fig-cap: Contribution amounts per month for each algorithm from 2026-04 to 2026-10. The current Actual Budget algorithm results in erratic contribution amounts. The naïve algorithm is better in that regard, but the proposed algorithm has the most consistent contribution amounts and the smallest maximum contribution amount required to meet all three goals.
 
 series = pd.DataFrame(
-    {"Current": current["Contribution"],
-    "Naïve": naive["Contribution"],
-    "Proposed": better["Contribution"]}
+    {"Current": current["Budgeted"],
+    "Naïve": naive["Budgeted"],
+    "Proposed": better["Budgeted"]}
 )
 labels = better["Month"]
 
