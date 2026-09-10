@@ -8,7 +8,7 @@ authors = [
 dependencies = [
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 docs = [
     "ipython",
     "jupyter",
