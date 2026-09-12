@@ -18,16 +18,17 @@ from betterbudgetgoals.algo import GradualGoal, contribution_amounts
 
 ## Background
 
+In Actual Budget, [templates](https://actualbudget.org/docs/experimental/goal-templates) are tools to automate your contributions to spending categories each month. Most are pretty straightforward. For example, `#template 50` will budget \$50 in a category each month, and `#template average 12 months` will budget equal to a category's average spending over the previous 12 months. Both of these examples, like most templates, prescribe a specific amount to be budgeted. But there are other templates that work differently. The template `#template 500 by 2027-02` will aim to build up a \$500 balance in the category by February of 2027. The template `#template schedule Car Insurance` will work the same, but will take its amount and date from a scheduled transaction called "Car Insurance."
 
 ## The Problem
 
 When you put multiple long-term goals into one category, the resulting behavior is a bit weird. Let's consider an example.
 
-> It's the beginning of Apil of 2026. You have a $100 balance in a spending category. There are three upcoming expenses in that category you want to save up for:
+> It's the beginning of Apil of 2026. You have a \$100 balance in a spending category. There are three upcoming expenses in that category you want to save up for:
 > 
-> - In July, you need to pay $300.
-> - In August, you need to pay $400.
-> - In October, you need to pay $100.
+> - In July, you need to pay \$300.
+> - In August, you need to pay \$400.
+> - In October, you need to pay \$100.
 
 You might translate these goals into the following three templates:
 

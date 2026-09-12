@@ -1,0 +1,61 @@
+---
+title: Proposed Algorithm Basics
+---
+
+```{python}
+#| label: setup
+#| include: false
+
+import pandas as pd
+from IPython.display import Markdown
+from tabulate import tabulate
+import matplotlib.pyplot as plt
+import numpy as np
+
+from betterbudgetgoals.month import YearMonth
+from betterbudgetgoals.algo import GradualGoal, contribution_amounts
+
+```
+
+To understand the basics of the proposed algorithm we'll start with a simplified case: multiple `By`-type templates in a single category, no other templates, no priorities, and no `spend from` clauses. Then we'll build back in these other details in the next section. 
+
+Let's use the example from the last section:
+
+> It's the beginning of April 2026. There is a \$100 balance in a spending category carried over from March and these three templates:
+> 
+> ```
+> #template 300 by 2026-07
+> #template 400 by 2026-08
+> #template 100 by 2026-10
+> ```
+
+We can visualize this situation as a series of cumulative milestones (@fig-cumulative-milestones).
+
+```{python}
+#| label: fig-cumulative-milestones
+#| echo: false
+#| fig-cap: The basic example shown as a series of cumulative milestones. We have $100 initially, and need to have budgeted $300 total by 2026-07, $700 total by 2026-08, and $800 total by 2026-10, in order to meet all three goals.
+
+startmonth = YearMonth(2026,4)
+startbalance = 100
+
+df = pd.DataFrame({
+    "Month":[startmonth + i for i in range(7)],
+    "Templates":[np.nan, np.nan, np.nan, 300, 400, np.nan, 100]
+},
+index=range(1,8))
+df["Targets"] = np.nancumsum(df["Templates"])
+df.loc[np.isnan(df["Templates"]), "Targets"] = np.nan
+
+with plt.style.context("ggplot"):
+    plt.scatter(df.index, df["Targets"], c="red", marker="D", label="Cumulative Targets")
+    plt.scatter([0], [startbalance], c="blue", label="Starting Balance")
+    ticks = [0] + list(df.index)
+    labels = [f"Start\n(End of {startmonth - 1})"] + list(df["Month"])
+    plt.xticks(ticks = ticks, labels = labels, rotation=30, ha="right")
+    plt.ylim((0,np.nanmax(df["Targets"])*1.1))
+    plt.legend(loc="upper left")
+plt.show()
+
+```
+

@@ -13,6 +13,7 @@ docs = [
     "ipython",
     "jupyter",
     "matplotlib",
+    "numpy",
     "pandas",
     "tabulate",
 ]
