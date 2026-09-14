@@ -43,8 +43,10 @@ jobs:
           python-version: ${{ env.python_version }}
           pip-version: ${{ env.pip_version }}
       
-      - name: Install local package and doc dependencies
+      - name: Install local package
         run: pip install .
+        
+      - name: Install documentation dependencies
         run: pip install --group docs
 
       - name: Setup Quarto
