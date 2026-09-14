@@ -1,23 +1,24 @@
 project:
-  type: website
+  type: book
+  preview:
+    port: 17487
 
-website:
+book:
   title: "Better Budget Goals"
   page-navigation: true
-  sidebar:
-    contents:
-      - index.qmd
-      - basics.qmd
-      - details.qmd
-      - full.qmd
+  chapters:
+    - index.qmd
+    - introduction.qmd
+    - basics.qmd
+    - details.qmd
+    - full.qmd
+
 
 format:
   html:
     theme:
       - cosmo
-      - brand
     css: styles.css
     toc: true
-
-
-
+  pdf:
+    toc: true

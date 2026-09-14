@@ -64,7 +64,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'docs/_site' # Upload build directory of quarto docs
+          path: 'docs/_book' # Upload build directory of quarto docs
 
       - name: Deploy to GitHub Pages
         id: deployment
