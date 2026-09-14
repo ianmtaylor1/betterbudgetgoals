@@ -17,9 +17,21 @@ from betterbudgetgoals.algo import GradualGoal, contribution_amounts
 
 ```
 
-To understand the basics of the proposed algorithm we'll start with a simplified case: multiple `By`-type templates in a single category, no other templates, no priorities, and no `spend from` clauses. Then we'll build back in these other details in the next section. 
+To understand the basics of the proposed algorithm we'll start with a simplified case: multiple `By`-type templates in a single category, no repeating, no other templates, no priorities, and no `spend from` clauses. Then we'll build back in these other details in the next section. The approach for this simplified case is given in [Algorithm @alg-basic]. @tbl-actual-current
 
-Let's use the example from the last section:
+::: {#alg-basic}
+
+### Basic Algorithm 
+
+*Multiple non-repeating `By`-type templates in a single category.*
+
+1. Convert each template into a cumulative target by calculating the total amount of additional money required to meet itself and all previous templates.
+2. For each cumulative target, calculate the monthly contribution required to meet the target. 
+3. Contribute the maximum of all calculated monthly contributions.
+
+:::
+
+Let's apply this to the example from the last section:
 
 > It's the beginning of April 2026. There is a \$100 balance in a spending category carried over from March and these three templates:
 > 
@@ -29,7 +41,9 @@ Let's use the example from the last section:
 > #template 100 by 2026-10
 > ```
 
-We can visualize this situation as a series of cumulative milestones (@fig-cumulative-milestones).
+... blah ...
+
+We can visualize this situation as a series of cumulative milestones (@fig-cumulative-milestones). To meet all of the goals, we need to make a series of budget contributions which cumulatively stay above all the milestones on this graph.
 
 ```{python}
 #| label: fig-cumulative-milestones
