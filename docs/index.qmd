@@ -2,8 +2,162 @@
 author: Ian Taylor
 ---
 
-## Overview {.unnumbered}
+# Introduction
 
-## Outline {.unnumbered}
+```{python}
+#| label: setup
+#| include: false
 
-adsf
+import pandas as pd
+from IPython.display import Markdown
+from tabulate import tabulate
+import matplotlib.pyplot as plt
+
+from betterbudgetgoals.month import YearMonth
+from betterbudgetgoals.algo import GradualGoal, contribution_amounts
+
+```
+
+## Background
+
+In Actual Budget, [templates](https://actualbudget.org/docs/experimental/goal-templates) are tools to automate your contributions to spending categories each month. Most are pretty straightforward. For example, `#template 50` will budget \$50 in a category each month, and `#template average 12 months` will budget equal to a category's average spending over the previous 12 months. Both of these examples, like most templates, prescribe a specific amount to be budgeted. But there are other templates that work differently. The template `#template 500 by 2027-02` will aim to build up a \$500 balance in the category by February of 2027. The template `#template schedule Car Insurance` will work the same, but will take its amount and date from a scheduled transaction called "Car Insurance."
+
+## The Problem
+
+When you put multiple long-term goals into one category, the resulting behavior is a bit weird. Let's consider an example.
+
+> It's the beginning of Apil of 2026. You have a \$100 balance in a spending category. There are three upcoming expenses in that category you want to save up for:
+> 
+> - In July, you need to pay \$300.
+> - In August, you need to pay \$400.
+> - In October, you need to pay \$100.
+
+You might translate these goals into the following three templates:
+
+```
+#template 300 by 2026-07
+#template 400 by 2026-08
+#template 100 by 2026-10
+```
+
+With these three templates, @tbl-actual-current shows what happens over the next 7 months.
+
+```{python}
+#| label: tbl-actual-current
+#| echo: false
+#| tbl-cap: "The results of having the three 'by' templates in a single category as of Actual Budget v26.9.0."
+
+startmonth = YearMonth(2026,4)
+startbalance = 100
+
+current = pd.DataFrame(
+    {"Month":[startmonth + i for i in range(7)],
+    "Budgeted":[144.29, 135.24, 113.57, 31.90, 208.33, 33.34, 33.33],
+    "Spent":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0]}
+)
+current["Balance"] = (current["Budgeted"] - current["Spent"]).cumsum() + startbalance
+
+Markdown(tabulate(current, headers="keys", showindex=False, floatfmt=".2f"))
+```
+
+This works, in the sense that the total contributed amount over 7 months is $700 (the total of all goals minus the initial balance) and the category balance is never overdrawn. But he contribution amounts are inconsistent and counterintuitive month-to-month.
+
+If someone were saving for these expenses manually, the simplest way would be to divide the amount of each expense by the number of months leading up to it (including the current month and the month of the expense), and contribute that same amount per month. I call this the *naïve* algorithm. @tbl-naive shows how the naïve algorithm would play out in this scenario.
+
+
+```{python}
+#| label: tbl-naive
+#| echo: false
+#| tbl-cap: "The results of using the naïve amount divided by time algorithm to save for the three upcoming expenses."
+
+startmonth = YearMonth(2026,4)
+startbalance = 100
+
+save_goal1 = (300 - startbalance) / 4
+save_goal2 = 400 / 5
+save_goal3 = 100 / 7
+
+naive = pd.DataFrame(
+    {"Month":[startmonth + i for i in range(7)],
+    "Budgeted":[
+        save_goal1+save_goal2+save_goal3, 
+        save_goal1+save_goal2+save_goal3, 
+        save_goal1+save_goal2+save_goal3,  
+        save_goal1+save_goal2+save_goal3, 
+        save_goal2+save_goal3, 
+        save_goal3, 
+        save_goal3],
+    "Spent":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0]}
+)
+naive["Balance"] = (naive["Budgeted"] - naive["Spent"]).cumsum() + startbalance
+
+Markdown(tabulate(naive, headers="keys", showindex=False, floatfmt=".2f"))
+```
+
+The values in this table result from counting the 100 already in the category towards the first goal and saving `{python} format(save_goal1, ".2f")` per month for the first goal, `{python} format(save_goal2, ".2f")` per month for the second goal, and `{python} format(save_goal3, ".2f")` per month for the third goal. These values are generally more intuitive for people -- more money is put aside each month initially, then less as each goal passes. And I think they are preferred by people because they are more consistent month-to-month and avoid sudden large contributions in a month.
+
+Behavior similar to the naïve algorithm can be forced in Actual Budget by simply splitting long-term savings goals into their own categories. [... why might people not want to do this ...].
+
+```{python}
+#| label: tbl-better
+#| echo: false
+#| tbl-cap: "A series of contributions that meets all three spending goals while being more consistent than either the default Actual Budget behavior or the naïve algorithm."
+
+startmonth = YearMonth(2026,4)
+startbalance = 100
+
+better = pd.DataFrame(
+    {"Month":[startmonth + i for i in range(7)],
+    "Budgeted":[0.0] * 7,
+    "Spent":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0],
+    "Balance": [0.0] * 7}
+)
+
+goals = [
+    GradualGoal(YearMonth(2026,7), 300, "spending"),
+    GradualGoal(YearMonth(2026,8), 400, "spending"),
+    GradualGoal(YearMonth(2026,10), 100, "spending")
+]
+
+balance = startbalance
+for i in range(better.shape[0]):
+    month = better.loc[i,"Month"]
+    contrib = contribution_amounts(
+        [g for g in goals if g.month >= month], 
+        [], 
+        month, 
+        {"spending":balance},
+        []
+    )[0]["spending"]
+    better.loc[i,"Budgeted"] = contrib
+    balance += contrib - better.loc[i,"Spent"]
+    better.loc[i,"Balance"] = balance
+
+
+Markdown(tabulate(better, headers="keys", showindex=False, floatfmt=".2f"))
+
+```
+
+```{python}
+#| label: fig-contributions
+#| echo: false
+#| fig-cap: Contribution amounts per month for each algorithm from 2026-04 to 2026-10. The current Actual Budget algorithm results in erratic contribution amounts. The naïve algorithm is better in that regard, but the proposed algorithm has the most consistent contribution amounts and the smallest maximum contribution amount required to meet all three goals.
+
+series = pd.DataFrame(
+    {"Current": current["Budgeted"],
+    "Naïve": naive["Budgeted"],
+    "Proposed": better["Budgeted"]}
+)
+labels = better["Month"]
+
+plt.grouped_bar(series, tick_labels=labels)
+plt.legend(loc="upper right")
+plt.title("Monthly Contributions for Each Algorithm")
+plt.show()
+```
+
+## The solution
+
+
+## Outline
+

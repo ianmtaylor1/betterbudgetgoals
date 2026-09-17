@@ -8,7 +8,6 @@ book:
   page-navigation: true
   chapters:
     - index.qmd
-    - introduction.qmd
     - basics.qmd
     - details.qmd
     - full.qmd
@@ -21,4 +20,5 @@ format:
     css: styles.css
     toc: true
   pdf:
-    toc: true
+    toc: false
+    number-sections: true
