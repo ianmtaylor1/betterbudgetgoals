@@ -1,6 +1,5 @@
----
-title: Proposed Algorithm Basics
----
+
+# Proposed Algorithm Basics {#sec-basics}
 
 ```{python}
 #| label: setup

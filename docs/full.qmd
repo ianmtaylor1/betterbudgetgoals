@@ -1,4 +1,2 @@
----
-title: Full Algorithm and Reference Code
----
 
+# Full Algorithm and Reference Code {#sec-full}

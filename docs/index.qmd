@@ -2,7 +2,7 @@
 author: Ian Taylor
 ---
 
-# Introduction
+# Introduction {#sec-introduction}
 
 ```{python}
 #| label: setup
@@ -20,7 +20,7 @@ from betterbudgetgoals.algo import GradualGoal, contribution_amounts
 
 ## Background
 
-In Actual Budget, [templates](https://actualbudget.org/docs/experimental/goal-templates) are tools to automate your contributions to spending categories each month. Most are pretty straightforward. For example, `#template 50` will budget \$50 in a category each month, and `#template average 12 months` will budget equal to a category's average spending over the previous 12 months. Both of these examples, like most templates, prescribe a specific amount to be budgeted. But there are other templates that work differently. The template `#template 500 by 2027-02` will aim to build up a \$500 balance in the category by February of 2027. The template `#template schedule Car Insurance` will work the same, but will take its amount and date from a scheduled transaction called "Car Insurance."
+In Actual Budget, [templates](https://actualbudget.org/docs/experimental/goal-templates) are tools to automate your contributions to spending categories each month. Most are pretty straightforward. For example, `#template 50` will budget \$50 in a category each month, and `#template average 12 months` will budget equal to a category's average spending over the previous 12 months. Both of these examples, like most templates, prescribe a specific amount to be budgeted. But there are other templates that work differently. The template `#template 500 by 2027-02` will aim to build up a \$500 balance in the category by February of 2027. The template `#template schedule Car Insurance` will work the same, but will take its amount and date from an upcoming scheduled transaction called "Car Insurance."
 
 ## The Problem
 

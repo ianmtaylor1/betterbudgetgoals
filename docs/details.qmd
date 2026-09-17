@@ -1,3 +1,2 @@
----
-title: Filling in the Details
----
+
+# Filling in the Details {#sec-details}
