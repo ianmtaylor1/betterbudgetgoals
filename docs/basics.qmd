@@ -16,29 +16,45 @@ from betterbudgetgoals.algo import GradualGoal, contribution_amounts
 
 ```
 
-To understand the basics of the proposed algorithm we'll start with a simplified case: multiple `By`-type templates in a single category, no repeating, no other templates, no priorities, and no `spend from` clauses. Then we'll build back in these other details in the next section. The approach for this simplified case is given in [Algorithm @alg-basic]. @tbl-actual-current
+To understand the basics of the proposed algorithm we'll start with a simplified case: multiple `by`-type templates in a single category, no repeating, no other templates, no priorities, and no `spend from` clauses. Then we'll build back in these other details in the next section. The approach for this simplified case is given in [Algorithm @alg-basic].
 
-::: {#alg-basic}
+:::{#alg-basic}
 
 ### Basic Algorithm 
 
-*Multiple non-repeating `By`-type templates in a single category.*
+*Multiple non-repeating `by`-type templates in a single category.*
 
-1. Convert each template into a cumulative target by calculating the total amount of additional money required to meet itself and all previous templates.
-2. For each cumulative target, calculate the monthly contribution required to meet the target. 
-3. Contribute the maximum of all calculated monthly contributions.
+**Input:**
+
+1. `current_month`, the current month
+2. `current_balance`, the category balance carried over from the previous month
+3. `templates = [(month, amount),...]`, a list of templates.
+
+**Output:** The amount to budget in the current month.
+
+**Steps:**
+
+1. Sort `templates` increasing by month.
+2. Set `total_target = -current_balance`.
+3. Set `max_budget = -inf`.
+4. For each template in `templates`:
+    1. Set `total_target += amount`
+    2. Set `budget = total_target / (month - current_month + 1)`.
+    3. If `budget > max_budget`: set `max_budget = budget`
+5. Return `max_budget`.
 
 :::
 
-Let's apply this to the example from the last section:
+::: {.callout-note}
+[Algorithm @alg-basic] can be more simply described in these three steps:
 
-> It's the beginning of April 2026. There is a \$100 balance in a spending category carried over from March and these three templates:
-> 
-> ```
-> #template 300 by 2026-07
-> #template 400 by 2026-08
-> #template 100 by 2026-10
-> ```
+1. Convert each template into a cumulative target. (Calculate the total amount of additional money required to meet itself and all previous templates.)
+2. For each cumulative target, calculate the monthly contribution from now required to meet the target.
+3. Return the maximum required monthly contribution.
+
+:::
+
+Let's apply this to @exm-multiple-by.
 
 ... blah ...
 

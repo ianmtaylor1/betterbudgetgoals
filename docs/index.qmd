@@ -22,23 +22,37 @@ from betterbudgetgoals.algo import GradualGoal, contribution_amounts
 
 In Actual Budget, [templates](https://actualbudget.org/docs/experimental/goal-templates) are tools to automate your contributions to spending categories each month. Most are pretty straightforward. For example, `#template 50` will budget \$50 in a category each month, and `#template average 12 months` will budget equal to a category's average spending over the previous 12 months. Both of these examples, like most templates, prescribe a specific amount to be budgeted. But there are other templates that work differently. The template `#template 500 by 2027-02` will aim to build up a \$500 balance in the category by February of 2027. The template `#template schedule Car Insurance` will work the same, but will take its amount and date from an upcoming scheduled transaction called "Car Insurance."
 
+... Contrast intuitive and Actual methods for a single long-term template.
+
+Some categories may require more complex combinations of these templates, including mixing several long-term `by` or `schedule` templates. In my life this is my pet expenses category. There are regular monthly expenses such as food, a recurring yearly vet visit I want to save up for, a recurring yearly purchase of heartworm preventative (out of sync with the vet), and occasionally, large one-off expenses like boarding that I want to save up for.
+
+![Maisie, enjoying a purchase from the 'Maisie' category.](img/maisie.jpg)
+
+Other people may experience this in a category for bills. In addition to monthly bills, they may want to save up for car insurance every 6 months and renters insurance every year.
+
 ## The Problem
 
-When you put multiple long-term goals into one category, the resulting behavior is a bit weird. Let's consider an example.
+When you put multiple long-term goals into one category, the resulting behavior is a bit weird. Consider @exm-multiple-by.
 
-> It's the beginning of Apil of 2026. You have a \$100 balance in a spending category. There are three upcoming expenses in that category you want to save up for:
-> 
-> - In July, you need to pay \$300.
-> - In August, you need to pay \$400.
-> - In October, you need to pay \$100.
+::: {#exm-multiple-by}
 
-You might translate these goals into the following three templates:
+*Multiple `by`-type templates.*
+
+It's the beginning of April of 2026. You have a \$100 balance in a spending category carried over from March. There are three upcoming expenses in that category you want to save up for:
+
+- In July, you need to pay \$300.
+- In August, you need to pay \$400.
+- In October, you need to pay \$100.
+
+To prepare for these expenses, you add the following three templates to the category:
 
 ```
 #template 300 by 2026-07
 #template 400 by 2026-08
 #template 100 by 2026-10
 ```
+
+:::
 
 With these three templates, @tbl-actual-current shows what happens over the next 7 months.
 
