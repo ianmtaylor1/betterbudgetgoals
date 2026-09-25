@@ -1,1 +1,9 @@
 /* css styles */
+
+/* Tighten up the steps of an algorithm */
+.algorithm > p + ol {
+    margin-top: 0rem;
+}
+.algorithm > p:has(+ ol) {
+    margin-bottom: 0rem;
+}
