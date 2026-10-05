@@ -1,2 +1,38 @@
 
 # Filling in the Details {#sec-details}
+
+## Repeating Gradual Templates
+
+## Gradual and Immediate Templates
+
+### Translating Templates {.unnumbered}
+
+So far, we've just been talking about Gradual and Immediate templates, but these are not the terms used by Actual Budget. We need a system to translate the Actual Budget-native template types to either Gradual or Immediate for use in this algorithm
+
+::::: {.columns}
+::: {.column}
+**Immediate**
+
+* Simple Type
+* Periodic Type
+* Percent Type
+* Schedule Type (with `full` flag)
+* Average Type
+* Copy Type
+:::
+
+::: {.column}
+**Gradual**
+
+* By Type
+* Schedule Type (without `full` flag)
+:::
+:::::
+
+Remainder Type templates are considered separately, after all other templates have run, as they are now. Limits on categories (i.e. `up to`) function the same as they do now, also.
+
+## Priorities
+
+## Spend From
+
+## Extending to Multiple Categories

@@ -51,14 +51,23 @@ To understand the basics of the proposed algorithm we'll start with a simplified
 1. Convert each template into a cumulative target. (Calculate the total amount of additional money required to meet itself and all previous templates.)
 2. For each cumulative target, calculate the monthly contribution from now required to meet the target.
 3. Return the maximum required monthly contribution.
+:::
+
+@tbl-basic-multiple-by shows [Algorithm @alg-basic] applied to @exm-multiple-by. In this case, the result would be to contribute \$120 to the category in order to meet all goals.
+
+::: {#tbl-basic-multiple-by}
+
+| Template (Sorted) | Cumulative Target | By Month | Contribution Required |
+|-------------------|-------------------|----------|-----------------------|
+| `#template 300 by 2026-07` | \$200 | 2026-07 | \$50 |
+| `#template 400 by 2026-08` | \$600 | 2026-08 | [**\$120**]{.border } |
+| `#template 100 by 2026-10` | \$700 | 2026-10 | \$100 |
+
+The calculations for the contribution amount for @exm-multiple-by according to [Algorithm @alg-basic]. The largest required monthly contribution of \$120 is selected. Note that the cumulative targets account for the \$100 available category balance, and the contribution required includes the current month, 2026-04, as well as the target month in the calculation.
 
 :::
 
-Let's apply this to @exm-multiple-by.
-
-... blah ...
-
-We can visualize this situation as a series of cumulative milestones (@fig-cumulative-milestones). To meet all of the goals, we need to make a series of budget contributions which cumulatively stay above all the milestones on this graph.
+To get a better sense of how this algorithm works, we can visualize the current balance and future goals on a graph (@fig-cumulative-milestones). To meet all of the goals, we need to make a series of budget contributions which cumulatively stay above all the milestones on this graph.
 
 ```{python}
 #| label: fig-cumulative-milestones
