@@ -1,8 +1,6 @@
 
 # Filling in the Details {#sec-details}
 
-## Repeating Gradual Templates
-
 ## Gradual and Immediate Templates
 
 ### Translating Templates {.unnumbered}
@@ -30,6 +28,8 @@ So far, we've just been talking about Gradual and Immediate templates, but these
 :::::
 
 Remainder Type templates are considered separately, after all other templates have run, as they are now. Limits on categories (i.e. `up to`) function the same as they do now, also.
+
+## Repeating Gradual Templates
 
 ## Priorities
 
