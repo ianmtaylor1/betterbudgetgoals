@@ -20,19 +20,27 @@ from betterbudgetgoals.algo import GradualGoal, contribution_amounts
 
 ## Background
 
-In Actual Budget, [templates](https://actualbudget.org/docs/experimental/goal-templates) are tools to automate your contributions to spending categories each month. Most are pretty straightforward. For example, `#template 50` will budget \$50 in a category each month, and `#template average 12 months` will budget equal to a category's average spending over the previous 12 months. Both of these examples, like most templates, prescribe a specific amount to be budgeted. But there are other templates that work differently. The template `#template 500 by 2027-02` will aim to build up a \$500 balance in the category by February of 2027. The template `#template schedule Car Insurance` will work the same, but will take its amount and date from an upcoming scheduled transaction called "Car Insurance."
+In Actual Budget, [templates](https://actualbudget.org/docs/experimental/goal-templates) are tools to automate your contributions to spending categories each month. Most are pretty straightforward. For example, `#template 50` will budget \$50 in a category each month, and `#template average 12 months` will budget equal to a category's average spending over the previous 12 months. Both of these examples, like most templates, prescribe a specific amount to be budgeted. But there are other templates that work differently. The template `#template 500 by 2027-02` will aim to build up a \$500 balance in the category by February of 2027. The template `#template schedule Car Insurance` will work similarly, but will take its amount and date from an upcoming scheduled transaction called "Car Insurance."
 
-... Contrast intuitive and Actual methods for a single long-term template.
+The most intuitive way to save up for a future expense is to calculate how much you will need to save monthly at the start, then save that much each month. We'll call this the *naïve* method.^["Naïve" here is used in the academic sense--the simplest, most obvious approach.]
 
-Some categories may require more complex combinations of these templates, including mixing several long-term `by` or `schedule` templates. In my life this is my pet expenses category. There are regular monthly expenses such as food, a recurring yearly vet visit I want to save up for, a recurring yearly purchase of heartworm preventative (out of sync with the vet), and occasionally, large one-off expenses like boarding that I want to save up for.
+$$ \text{contribution} = \frac{\text{goal} - \text{starting balance}}{\text{goal month} - \text{starting month} + 1} $$ {#eq-naive} 
+
+However @eq-naive requires storing the starting date and starting balance of a savings goal, or storing the monthly contribution amount once initially calculated. Actual Budget doesn't store this information, so the amount to contribute must be calculated based on the *current* month and *current* balance only. For a single long-term template, we can use a "memoryless" version, @eq-memoryless instead.
+
+$$ \text{contribution} = \frac{\text{goal} - \text{\textit{current} balance}}{\text{goal month} - \text{\textit{current} month} + 1} $$ {#eq-memoryless} 
+
+The memoryless version does have some advantages, namely, if you unexpectedly spend from or contribute to the category you're saving in, the memoryless approach will automatically adjust your future contributions to still meet the goal. However, if there multiple long-term goals simultaneously, the memoryless approach becomes harder to manage. It's difficult to know exactly how much to save in any month without remembering the starting dates of specific goals.
+
+Complex combinations of templates, including mixing several long-term `by` or `schedule` templates, do happen in regularly. In my life this is my pet expenses category. There are regular monthly expenses such as food, plus several larger expenses I want to save up for: a yearly vet visit in January, a yearly purchase of heartworm preventative chews in March, and occasionally, one-off boarding expenses for upcoming travel.
 
 ![Maisie, enjoying a purchase from the 'Maisie' category.](img/maisie.jpg)
 
-Other people may experience this in a category for bills. In addition to monthly bills, they may want to save up for car insurance every 6 months and renters insurance every year.
+Other people may experience this in a category for bills. In addition to monthly bills, they may want to save up for car insurance every 6 months and renters insurance every year, two longer term goals of different frequencies and different amounts.
 
-## The Problem
+## The Problem: Current Actual Budget Behavior
 
-When you put multiple long-term goals into one category, the resulting behavior is a bit weird. Consider @exm-multiple-by.
+When you put multiple long-term goals into one category, the resulting behavior in Actual Budget is a bit weird. Consider @exm-multiple-by.
 
 ::: {#exm-multiple-by}
 
@@ -76,7 +84,7 @@ Markdown(tabulate(current, headers="keys", showindex=False, floatfmt=".2f"))
 
 This works, in the sense that the total contributed amount over 7 months is $700 (the total of all goals minus the initial balance) and the category balance is never overdrawn. But he contribution amounts are inconsistent and counterintuitive month-to-month.
 
-If someone were saving for these expenses manually, the simplest way would be to divide the amount of each expense by the number of months leading up to it (including the current month and the month of the expense), and contribute that same amount per month. I call this the *naïve* algorithm. @tbl-naive shows how the naïve algorithm would play out in this scenario.
+If we were able to use the naïve method in this case by keeping track of goal start dates, @tbl-naive shows how much we would contribute and spend in each month.
 
 
 ```{python}
@@ -110,7 +118,11 @@ Markdown(tabulate(naive, headers="keys", showindex=False, floatfmt=".2f"))
 
 The values in this table result from counting the 100 already in the category towards the first goal and saving `{python} format(save_goal1, ".2f")` per month for the first goal, `{python} format(save_goal2, ".2f")` per month for the second goal, and `{python} format(save_goal3, ".2f")` per month for the third goal. These values are generally more intuitive for people -- more money is put aside each month initially, then less as each goal passes. And I think they are preferred by people because they are more consistent month-to-month and avoid sudden large contributions in a month.
 
-Behavior similar to the naïve algorithm can be forced in Actual Budget by simply splitting long-term savings goals into their own categories. [... why might people not want to do this ...].
+Behavior similar to the naïve algorithm can be forced in Actual Budget by simply splitting long-term savings goals into their own categories. But this doesn't always make sense for people's budgets. For example, I don't want to have a separate category for vet, heartworm pills, dog food, and dog boarding. I just want one "Maisie" category.
+
+## The Solution: A Better Template Algorithm
+
+
 
 ```{python}
 #| label: tbl-better
@@ -164,13 +176,12 @@ series = pd.DataFrame(
 )
 labels = better["Month"]
 
-plt.grouped_bar(series, tick_labels=labels)
-plt.legend(loc="upper right")
-plt.title("Monthly Contributions for Each Algorithm")
+with plt.style.context("ggplot"):
+    plt.grouped_bar(series, tick_labels=labels, colors=["purple", "blue", "green"])
+    plt.legend(loc="upper right")
+    plt.title("Monthly Contributions for Each Algorithm")
 plt.show()
 ```
-
-## The solution
 
 
 ## Outline
