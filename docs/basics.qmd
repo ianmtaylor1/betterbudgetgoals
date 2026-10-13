@@ -67,33 +67,76 @@ The calculations for the contribution amount for @exm-multiple-by according to [
 
 :::
 
-To get a better sense of how this algorithm works, we can visualize the current balance and future goals on a graph (@fig-cumulative-milestones). To meet all of the goals, we need to make a series of budget contributions which cumulatively stay above all the milestones on this graph.
+The key to understanding how this works is to see that the cumulative targets are the total amount of contributions you will need to satisfy all the goals on time (ignoring, for the moment, any other contributions or expenses in the category). E.g., in @exm-multiple-by you will need to make \$200 total contributions by 2026-07, \$600 total contributions by 2026-08, and \$700 total contributions by 2026-10. If you do that, you will have enough money for each of your planned expenses when they occur.
+
+We can also visualize the current balance and future goals on a graph (@fig-cumulative-milestones). Budget contributions made over the same time frame form a path on the graph. To meet all of the goals, we need to make a series of budget contributions which cumulatively stay above all the milestones on this graph.
 
 ```{python}
 #| label: fig-cumulative-milestones
 #| echo: false
-#| fig-cap: The basic example shown as a series of cumulative milestones. We have $100 initially, and need to have budgeted $300 total by 2026-07, $700 total by 2026-08, and $800 total by 2026-10, in order to meet all three goals.
+#| fig-cap: The basic example shown as a series of cumulative milestones. We have $100 initially, and need to have budgeted $300 total by 2026-07, $700 total by 2026-08, and $800 total by 2026-10, in order to meet all three goals. One possible series of contributions is shown as a path which stays above all targets.
 
 startmonth = YearMonth(2026,4)
 startbalance = 100
 
-df = pd.DataFrame({
+# Cumulative Goals
+paths = pd.DataFrame({
     "Month":[startmonth + i for i in range(7)],
     "Templates":[np.nan, np.nan, np.nan, 300, 400, np.nan, 100]
 },
 index=range(1,8))
-df["Targets"] = np.nancumsum(df["Templates"])
-df.loc[np.isnan(df["Templates"]), "Targets"] = np.nan
+paths["Targets"] = np.nancumsum(paths["Templates"])
+paths.loc[np.isnan(paths["Templates"]), "Targets"] = np.nan
+paths["Targets"] -= startbalance
+# Possible Paths
+paths["ActualBudget"] = np.cumsum([144.29, 135.24, 113.57, 31.90, 208.33, 33.34, 33.33])
+paths["Naïve"] = np.cumsum([144.29, 144.29, 144.29, 144.29, 94.28, 14.28, 14.28])
+paths["Proposed"] = np.cumsum([120, 120, 120, 120, 120, 50, 50])
+paths["Possible Contribution Path"] = np.array([170, 200, 300, 375, 650, 690, 720])
+
+styles = {
+    "ActualBudget":{"c":"purple"}, 
+    "Naïve":{"c":"blue"}, 
+    "Proposed":{"c":"green"},
+    "Possible Contribution Path":{"c":"black", "linestyle":"--"}
+}
+
+def _subdict(dict, keys):
+    return {k:dict[k] for k in keys}
+
+def plotpaths(df: pd.DataFrame, pathstyles=dict[str,dict]):
+    """Produce a repeatable plot of the starting point, goals, and 
+    one or more paths."""
+    plt.plot(df.index, df["Targets"], 
+             linestyle="none", zorder=10,
+             c="red", ms=10, marker="*", label="Cumulative Targets")
+    plt.plot([0], [0],
+             linestyle="none", zorder=10,
+             c="black", ms=10, marker="o", label="Start")
+    for path in pathstyles.keys():
+        plt.plot([0] + list(df.index), [0] + list(df[path]),
+                 label=path, marker = "D", ms = 4, zorder=5, **pathstyles[path])
+    ticks = [0] + list(df.index)
+    labels = [f"Start\n(End of {df.loc[1,"Month"] - 1})"] + list(df["Month"])
+    plt.xticks(ticks = ticks, labels = labels, rotation=30, ha="right")
+    plotmax = np.nanmax(df["Targets"])
+    plt.ylim((-0.1 * plotmax, 1.1 * plotmax))
+    plt.legend(loc="upper left")
 
 with plt.style.context("ggplot"):
-    plt.scatter(df.index, df["Targets"], c="red", marker="D", label="Cumulative Targets")
-    plt.scatter([0], [startbalance], c="blue", label="Starting Balance")
-    ticks = [0] + list(df.index)
-    labels = [f"Start\n(End of {startmonth - 1})"] + list(df["Month"])
-    plt.xticks(ticks = ticks, labels = labels, rotation=30, ha="right")
-    plt.ylim((0,np.nanmax(df["Targets"])*1.1))
-    plt.legend(loc="upper left")
+    plotpaths(paths, _subdict(styles, ["Possible Contribution Path"]))
 plt.show()
+
 
 ```
 
+
+
+```{python}
+#| echo: false
+
+with plt.style.context("ggplot"):
+    plotpaths(paths, _subdict(styles, ["ActualBudget", "Naïve"]))
+plt.show()
+
+```
