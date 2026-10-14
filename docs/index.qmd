@@ -2,8 +2,6 @@
 author: Ian Taylor
 ---
 
-# Introduction {#sec-introduction}
-
 ```{python}
 #| label: setup
 #| include: false
@@ -18,19 +16,41 @@ from betterbudgetgoals.algo import GradualGoal, contribution_amounts
 
 ```
 
+# Introduction {#sec-introduction}
+
+This document proposes an improved template algorithm in Actual Budget (@fig-algorithm-diagram). The template algorithm is what runs whenever you click "Apply budget template" or "Overwrite with budget template" in Actual Budget. The proposed algorithm primarily changes the way long-term templates (e.g., `by`-type templates) are handled to make the monthly contributions more consistent and manageable when there are multiple long-term templates in the budget file.
+
+```{mermaid}
+%%| label: fig-algorithm-diagram
+%%| fig-cap: "The template algorithm is the piece of code that takes in all templates (including priorities) and surrounding budget context (balances, transaction history, schedules, available funds, etc.) and outputs the amount to budget in each catetory."
+
+flowchart LR
+    ALG[["`**Proposed Template Algorithm**`"]]
+    IN[/"`**Input**
+    Templates, 
+    Budget Context`"/]
+    OUT[/"`**Output**
+    Amount to be Budgeted Per Category`"/]
+    IN --> ALG
+    ALG --> OUT
+    style ALG fill:#dfd,color:#000,stroke-width:2pt
+```
+
+
+
 ## Background
 
 In Actual Budget, [templates](https://actualbudget.org/docs/experimental/goal-templates) are tools to automate your contributions to spending categories each month. Most are pretty straightforward. For example, `#template 50` will budget \$50 in a category each month, and `#template average 12 months` will budget equal to a category's average spending over the previous 12 months. Both of these examples, like most templates, prescribe a specific amount to be budgeted. But there are other templates that work differently. The template `#template 500 by 2027-02` will aim to build up a \$500 balance in the category by February of 2027. The template `#template schedule Car Insurance` will work similarly, but will take its amount and date from an upcoming scheduled transaction called "Car Insurance."
 
-The most intuitive way to save up for a future expense is to calculate how much you will need to save monthly at the start, then save that much each month. We'll call this the *naïve* method.^["Naïve" here is used in the academic sense--the simplest, most obvious approach.]
+The most intuitive way to save up for a future expense is to calculate how much you will need to save monthly at the start, then save that much each month. We'll call this the *naïve* method.^["Naïve" here is used in the academic sense---the simplest, most obvious approach.]
 
 $$ \text{contribution} = \frac{\text{goal} - \text{starting balance}}{\text{goal month} - \text{starting month} + 1} $$ {#eq-naive} 
 
-However @eq-naive requires storing the starting date and starting balance of a savings goal, or storing the monthly contribution amount once initially calculated. Actual Budget doesn't store this information, so the amount to contribute must be calculated based on the *current* month and *current* balance only. For a single long-term template, we can use a "memoryless" version, @eq-memoryless instead.
+However @eq-naive requires storing the starting date and starting balance of a savings goal, or storing the monthly contribution amount once initially calculated. Actual Budget doesn't store this information, so the amount to contribute must be calculated based on the *current* month and *current* balance only. For a single long-term template, we can use a "memoryless" version (@eq-memoryless) instead.
 
 $$ \text{contribution} = \frac{\text{goal} - \text{\textit{current} balance}}{\text{goal month} - \text{\textit{current} month} + 1} $$ {#eq-memoryless} 
 
-The memoryless version does have some advantages, namely, if you unexpectedly spend from or contribute to the category you're saving in, the memoryless approach will automatically adjust your future contributions to still meet the goal. However, if there multiple long-term goals simultaneously, the memoryless approach becomes harder to manage. It's difficult to know exactly how much to save in any month without remembering the starting dates of specific goals.
+The memoryless version does have some advantages, namely, if you unexpectedly spend from or contribute to the category you're saving in, the memoryless approach will automatically adjust your future contributions to still meet the goal. And if nothing like that happens, the memoryless version will behave exactly like the naïve version. However, if there multiple long-term goals simultaneously, the memoryless approach becomes harder to manage. It's difficult to know exactly how much to save in any month without remembering the starting dates of specific goals.
 
 Complex combinations of templates, including mixing several long-term `by` or `schedule` templates, do happen in regularly. In my life this is my pet expenses category. There are regular monthly expenses such as food, plus several larger expenses I want to save up for: a yearly vet visit in January, a yearly purchase of heartworm preventative chews in March, and occasionally, one-off boarding expenses for upcoming travel.
 
@@ -122,7 +142,7 @@ Behavior similar to the naïve algorithm can be forced in Actual Budget by simpl
 
 ## The Solution: A Better Template Algorithm
 
-
+A template algorithm exists that is better than both the current Actual Budget algorithm *and* the naïve method. @tbl-better shows a series of contributions for @exm-multiple-by that meets all of the requirements (\$700 total contributed and balance is never negative), but with some distinct advantages.
 
 ```{python}
 #| label: tbl-better
@@ -164,6 +184,8 @@ Markdown(tabulate(better, headers="keys", showindex=False, floatfmt=".2f"))
 
 ```
 
+The maximum amount contributed in any month is only `{python} format(max(better["Budgeted"]), ".2f")` in this scenario, compared to `{python} format(max(naive["Budgeted"]), ".2f")` in the naïve method and `{python} format(max(current["Budgeted"]), ".2f")` in the current version of Actual Budget. The contribution amount is also consistent for more consecutive months than in either other method. These advantages are shown more clearly in @fig-contributions.
+
 ```{python}
 #| label: fig-contributions
 #| echo: false
@@ -183,6 +205,14 @@ with plt.style.context("ggplot"):
 plt.show()
 ```
 
+This series of contributions is produced by the algorithm proposed in the rest of this document. This algorithm is compatible with the existing template algorithm in two key ways:
 
-## Outline
+1. It tries to match the behavior of the existing template algorithm in all scenarios except when there are multiple long-term templates in one budget file.
+2. It maintains the memorylessness of Actual Budget templates, and requires no new information to be stored in the database.
+
+But it also makes several improvements:
+
+1. The maximum amount required to be withdrawn from available funds over the lifetime of the templates is lower than in any other algorithm.
+2. The algorithm allows for `by`-type templates in the same category to have different priorities.
+3. The algorithm is extensible to template types that may be added in the future.
 
