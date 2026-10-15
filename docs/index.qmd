@@ -214,5 +214,5 @@ But it also makes several improvements:
 
 1. The maximum amount required to be withdrawn from available funds over the lifetime of the templates is lower than in any other algorithm.
 2. The algorithm allows for `by`-type templates in the same category to have different priorities.
-3. The algorithm is extensible to template types that may be added in the future.
+3. The algorithm is extendable to template types that may be added in the future.
 
