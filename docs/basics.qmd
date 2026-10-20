@@ -10,17 +10,22 @@ from IPython.display import Markdown
 from tabulate import tabulate
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 from betterbudgetgoals.month import YearMonth
 from betterbudgetgoals.algo import GradualGoal, contribution_amounts
 
 ```
 
-To understand the basics of the proposed algorithm we'll start with a simplified case: multiple `by`-type templates in a single category, no repeating, no other templates, no priorities, and no `spend from` clauses. Then we'll build back in these other details in the next section. The approach for this simplified case is given in [Algorithm @alg-basic].
+To understand the basics of the proposed algorithm we'll start with a simplified case: multiple `by`-type templates in a single category, no repeating, no other templates, no priorities, and no `spend from` clauses. Then we'll build back in these other details in the next section. 
+
+## Simplified Algorithm
+
+The approach for this simplified case is given in [Algorithm @alg-basic].
 
 :::{#alg-basic}
 
-### Basic Algorithm 
+### Simplified Algorithm 
 
 *Multiple non-repeating `by`-type templates in a single category.*
 
@@ -69,12 +74,14 @@ The calculations for the contribution amount for @exm-multiple-by according to [
 
 The key to understanding how this works is to see that the cumulative targets are the total amount of contributions you will need to satisfy all the goals on time (ignoring, for the moment, any other contributions or expenses in the category). E.g., in @exm-multiple-by you will need to make \$200 total contributions by 2026-07, \$600 total contributions by 2026-08, and \$700 total contributions by 2026-10. If you do that, you will have enough money for each of your planned expenses when they occur.
 
-We can also visualize the current balance and future goals on a graph (@fig-cumulative-milestones). Budget contributions made over the same time frame form a path on the graph. To meet all of the goals, we need to make a series of budget contributions which cumulatively stay above all the milestones on this graph.
+## Visualizing the Simplified Algorithm
+
+We can also visualize the cumulative targets on a graph (@fig-cumulative-milestones). Budget contributions made over the same time frame form a path on the graph starting at $(0,0)$. Any series of budget contributions whose path stays above all the milestones on this graph will meet all of the goals (always have enough money in the category for the planned expenses). But not all successful paths are good. The *best* path is the one which meets all required milestones while making contributions that are as small as possible and as consistent as possible. To get this path, imagine stretching a rubber band from the starting point, $(0,0)$, over the top of the graph to the final milestone. This path forms a series of straight lines, resting on some milestones and passing over the top of others.
 
 ```{python}
 #| label: fig-cumulative-milestones
 #| echo: false
-#| fig-cap: The basic example shown as a series of cumulative milestones. We have $100 initially, and need to have budgeted $300 total by 2026-07, $700 total by 2026-08, and $800 total by 2026-10, in order to meet all three goals. One possible series of contributions is shown as a path which stays above all targets.
+#| fig-cap: The basic example shown as a series of cumulative milestones. We have $100 initially, and need to have budgeted $300 total by 2026-07, $700 total by 2026-08, and $800 total by 2026-10, in order to meet all three goals. One possible series of contributions is shown as an arbitrary path which stays above all targets. The "rubber band" path is shown in comparison.
 
 startmonth = YearMonth(2026,4)
 startbalance = 100
@@ -92,21 +99,25 @@ paths["Targets"] -= startbalance
 paths["ActualBudget"] = np.cumsum([144.29, 135.24, 113.57, 31.90, 208.33, 33.34, 33.33])
 paths["Naïve"] = np.cumsum([144.29, 144.29, 144.29, 144.29, 94.28, 14.28, 14.28])
 paths["Proposed"] = np.cumsum([120, 120, 120, 120, 120, 50, 50])
+paths["Rubber Band Path"] = paths["Proposed"]
 paths["Possible Contribution Path"] = np.array([170, 200, 300, 375, 650, 690, 720])
 
 styles = {
     "ActualBudget":{"c":"purple"}, 
     "Naïve":{"c":"blue"}, 
     "Proposed":{"c":"green"},
+    "Rubber Band Path":{"c":"darkgoldenrod"},
     "Possible Contribution Path":{"c":"black", "linestyle":"--"}
 }
 
 def _subdict(dict, keys):
     return {k:dict[k] for k in keys}
 
-def plotpaths(df: pd.DataFrame, pathstyles=dict[str,dict]):
+def plotpaths(df: pd.DataFrame, pathstyles: dict[str,dict] = None):
     """Produce a repeatable plot of the starting point, goals, and 
     one or more paths."""
+    if pathstyles is None:
+        pathstyles = dict()
     plt.plot(df.index, df["Targets"], 
              linestyle="none", zorder=10,
              c="red", ms=10, marker="*", label="Cumulative Targets")
@@ -124,19 +135,63 @@ def plotpaths(df: pd.DataFrame, pathstyles=dict[str,dict]):
     plt.legend(loc="upper left")
 
 with plt.style.context("ggplot"):
-    plotpaths(paths, _subdict(styles, ["Possible Contribution Path"]))
+    plotpaths(paths, _subdict(styles, ["Possible Contribution Path", "Rubber Band Path"]))
 plt.show()
-
 
 ```
 
-
+To start out on this path, we need to make a contribution in the first month that lines up with the first segment. Because the rubber band path must stretch over all cumulative milestones, its slope in the beginning needs to be equal to the maximum slope over all milestones. So the slope of the first segment will be the maximum slope to any cumulative milestone, which is exactly what [Algorithm @alg-basic] calculates. @fig-slopes illustrates how the contributions required in @tbl-basic-multiple-by correspond to slopes, and how the maximum slope coincides with the first segment of the rubber band path.
 
 ```{python}
 #| echo: false
+#| label: fig-slopes
+#| fig-cap: The slopes to each cumulative milestone. The maximum slope of 120/month coincides with the second milestone, which is where the rubber band bends in the rubber band path.
 
 with plt.style.context("ggplot"):
-    plotpaths(paths, _subdict(styles, ["ActualBudget", "Naïve"]))
+    plotpaths(paths)
+    for idx,row in paths.iterrows():
+        if not np.isnan(row["Targets"]):
+            plt.plot([0,idx], [0,row["Targets"]], c="black", linestyle="--")
+            plt.text(idx*0.95, row["Targets"]*0.97,
+                     "{:.2f} / month".format(row["Targets"]/idx),
+                     ha="right", zorder=100,
+                     rotation=math.atan2(row["Targets"], idx)*180/math.pi,
+                     transform_rotates_text=True, rotation_mode="anchor")
+            # TODO: color them the same
+    plt.legend()
+plt.show()
+
+```
+
+## Walkthrough of the Example
+
+So far we've only been talking about the first month's contribution, but how will the rest of the months go? Will [Algorithm @alg-basic] actually send us on the desired path as we continue? To see, we'll walk through @exm-multiple-by over all months.
+
+#### 2026-04 {.unnumbered}
+
+#### 2026-05 {.unnumbered}
+
+#### 2026-06 {.unnumbered}
+
+#### 2026-07 {.unnumbered}
+
+#### 2026-08 {.unnumbered}
+
+#### 2026-09 {.unnumbered}
+
+#### 2026-10 {.unnumbered}
+
+## How This Approach is Optimal
+
+We previously said that the best path of contributions would have the smallest and most consistent contributions. We'll translate this into a minimax criterion: a series of contributions is best if it has the smallest maximum contribution over all months compared to any other acceptable series of contributions.
+
+```{python}
+#| echo: false
+#| label: fig-possible-paths
+#| fig-cap: A comparison of the proposed algorithm, a.k.a. the rubber band path, and other algorithms from @sec-introduction.
+
+with plt.style.context("ggplot"):
+    plotpaths(paths, _subdict(styles, ["ActualBudget", "Naïve", "Proposed"]))
 plt.show()
 
 ```
