@@ -15,6 +15,70 @@ import math
 from betterbudgetgoals.month import YearMonth
 from betterbudgetgoals.algo import GradualGoal, contribution_amounts
 
+######## Functions to make repeatable dataframes and plots ##########
+
+def goaldf(goals: list[GradualGoal], startmonth: YearMonth, startbalance: float = 0.0):
+    """Translate a list of gradual goals into a dataframe for plotting.
+    Only works when each goal has a different month, which is fine for this page.
+    But would need to fix in general."""
+    endmonth = max(g.month for g in goals)
+    assert endmonth >= startmonth
+    nummonths = endmonth - startmonth + 1
+    # Fill in template amounts
+    df = pd.DataFrame(
+        {
+            "Month":[startmonth + i for i in range(nummonths)],
+            "Templates":[np.nan] * nummonths
+        },
+        index=range(1,nummonths+1)
+    )
+    for g in goals:
+        df.loc[df["Month"] == g.month, "Templates"] = g.amount
+    # Create cumulative targets
+    df["Targets"] = np.nancumsum(df["Templates"])
+    df.loc[np.isnan(df["Templates"]), "Targets"] = np.nan
+    df["Targets"] -= startbalance
+
+    return df
+
+
+def _subdict(dict, keys):
+    return {k:dict[k] for k in keys}
+
+def plotpaths(df: pd.DataFrame, pathstyles: dict[str,dict] = None):
+    """Produce a repeatable plot of the starting point, goals, and 
+    one or more paths."""
+    if pathstyles is None:
+        pathstyles = dict()
+    plt.plot(df.index, df["Targets"], 
+             linestyle="none", zorder=10,
+             c="red", ms=10, marker="*", label="Cumulative Targets")
+    plt.plot([0], [0],
+             linestyle="none", zorder=10,
+             c="black", ms=10, marker="o", label="Start")
+    for path in pathstyles.keys():
+        plt.plot([0] + list(df.index), [0] + list(df[path]),
+                 label=path, marker = "D", ms = 4, zorder=5, **pathstyles[path])
+    ticks = [0] + list(df.index)
+    labels = [f"Start\n(End of {df.loc[1,"Month"] - 1})"] + list(df["Month"])
+    plt.xticks(ticks = ticks, labels = labels, rotation=30, ha="right")
+    plotmax = max(0,np.nanmax(df["Targets"]))
+    plotmin = min(0,np.nanmin(df["Targets"]))
+    plt.ylim((plotmin - 0.1 * (plotmax - plotmin), plotmax + 0.1 * (plotmax - plotmin)))
+    plt.legend(loc="upper left")
+
+def plotslopes(df: pd.DataFrame):
+    plotpaths(df)
+    for idx,row in df.iterrows():
+        if not np.isnan(row["Targets"]):
+            plt.plot([0,idx], [0,row["Targets"]], c="black", linestyle="--")
+            plt.text(idx*0.95, row["Targets"]*0.95,
+                     "{:.2f} / month".format(row["Targets"]/idx),
+                     ha="right", va="bottom", zorder=100,
+                     rotation=math.atan2(row["Targets"], idx)*180/math.pi,
+                     transform_rotates_text=True, rotation_mode="anchor")
+    plt.legend()
+
 ```
 
 To understand the basics of the proposed algorithm we'll start with a simplified case: multiple `by`-type templates in a single category, no repeating, no other templates, no priorities, and no `spend from` clauses. Then we'll build back in these other details in the next section. 
@@ -63,7 +127,7 @@ The approach for this simplified case is given in [Algorithm @alg-basic].
 ::: {#tbl-basic-multiple-by}
 
 | Template (Sorted) | Cumulative Target | By Month | Contribution Required |
-|-------------------|-------------------|----------|-----------------------|
+|:--------|--:|:--:|--:|
 | `#template 300 by 2026-07` | \$200 | 2026-07 | \$50 |
 | `#template 400 by 2026-08` | \$600 | 2026-08 | [**\$120**]{.border } |
 | `#template 100 by 2026-10` | \$700 | 2026-10 | \$100 |
@@ -85,16 +149,16 @@ We can also visualize the cumulative targets on a graph (@fig-cumulative-milesto
 
 startmonth = YearMonth(2026,4)
 startbalance = 100
+cat = "general" # Just need an arbitrary category name
+goals = [
+    GradualGoal(YearMonth(2026,7), 300, cat),
+    GradualGoal(YearMonth(2026,8), 400, cat),
+    GradualGoal(YearMonth(2026,10), 100, cat)
+]
+
 
 # Cumulative Goals
-paths = pd.DataFrame({
-    "Month":[startmonth + i for i in range(7)],
-    "Templates":[np.nan, np.nan, np.nan, 300, 400, np.nan, 100]
-},
-index=range(1,8))
-paths["Targets"] = np.nancumsum(paths["Templates"])
-paths.loc[np.isnan(paths["Templates"]), "Targets"] = np.nan
-paths["Targets"] -= startbalance
+paths = goaldf(goals, startmonth, startbalance)
 # Possible Paths
 paths["ActualBudget"] = np.cumsum([144.29, 135.24, 113.57, 31.90, 208.33, 33.34, 33.33])
 paths["Naïve"] = np.cumsum([144.29, 144.29, 144.29, 144.29, 94.28, 14.28, 14.28])
@@ -110,30 +174,6 @@ styles = {
     "Possible Contribution Path":{"c":"black", "linestyle":"--"}
 }
 
-def _subdict(dict, keys):
-    return {k:dict[k] for k in keys}
-
-def plotpaths(df: pd.DataFrame, pathstyles: dict[str,dict] = None):
-    """Produce a repeatable plot of the starting point, goals, and 
-    one or more paths."""
-    if pathstyles is None:
-        pathstyles = dict()
-    plt.plot(df.index, df["Targets"], 
-             linestyle="none", zorder=10,
-             c="red", ms=10, marker="*", label="Cumulative Targets")
-    plt.plot([0], [0],
-             linestyle="none", zorder=10,
-             c="black", ms=10, marker="o", label="Start")
-    for path in pathstyles.keys():
-        plt.plot([0] + list(df.index), [0] + list(df[path]),
-                 label=path, marker = "D", ms = 4, zorder=5, **pathstyles[path])
-    ticks = [0] + list(df.index)
-    labels = [f"Start\n(End of {df.loc[1,"Month"] - 1})"] + list(df["Month"])
-    plt.xticks(ticks = ticks, labels = labels, rotation=30, ha="right")
-    plotmax = np.nanmax(df["Targets"])
-    plt.ylim((-0.1 * plotmax, 1.1 * plotmax))
-    plt.legend(loc="upper left")
-
 with plt.style.context("ggplot"):
     plotpaths(paths, _subdict(styles, ["Possible Contribution Path", "Rubber Band Path"]))
 plt.show()
@@ -148,17 +188,7 @@ To start out on this path, we need to make a contribution in the first month tha
 #| fig-cap: The slopes to each cumulative milestone. The maximum slope of 120/month coincides with the second milestone, which is where the rubber band bends in the rubber band path.
 
 with plt.style.context("ggplot"):
-    plotpaths(paths)
-    for idx,row in paths.iterrows():
-        if not np.isnan(row["Targets"]):
-            plt.plot([0,idx], [0,row["Targets"]], c="black", linestyle="--")
-            plt.text(idx*0.95, row["Targets"]*0.97,
-                     "{:.2f} / month".format(row["Targets"]/idx),
-                     ha="right", zorder=100,
-                     rotation=math.atan2(row["Targets"], idx)*180/math.pi,
-                     transform_rotates_text=True, rotation_mode="anchor")
-            # TODO: color them the same
-    plt.legend()
+    plotslopes(paths)
 plt.show()
 
 ```
@@ -167,23 +197,156 @@ plt.show()
 
 So far we've only been talking about the first month's contribution, but how will the rest of the months go? Will [Algorithm @alg-basic] actually send us on the desired path as we continue? To see, we'll walk through @exm-multiple-by over all months.
 
-#### 2026-04 {.unnumbered}
+:::{}
+**2026-04**
 
-#### 2026-05 {.unnumbered}
+From @tbl-basic-multiple-by, we know the contribution for this month will be \$120, resulting in the following state:
 
-#### 2026-06 {.unnumbered}
+| Starting Balance | Budgeted | Spent | Ending Balance |
+|:----|:----|:----|:----|
+| \$100.00 | \$120.00 | \$0.00 | \$220.00 |
 
-#### 2026-07 {.unnumbered}
+```{python}
+#| include: false
 
-#### 2026-08 {.unnumbered}
+# Set up the next code blocks
+curmonth = startmonth
+endbal = 220
+```
 
-#### 2026-09 {.unnumbered}
+:::
 
-#### 2026-10 {.unnumbered}
+:::{}
+**2026-05**
+
+```{python}
+#| echo: false
+curmonth += 1
+goals = [g for g in goals if g.month >= curmonth]
+startbal = endbal
+with plt.style.context("ggplot"):
+    plotslopes(goaldf(goals, curmonth, startbal))
+spend = sum(ym.amount for ym in goals if ym.month == curmonth)
+contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
+endbal = startbal + contrib - spend
+```
+
+| Starting Balance | Budgeted | Spent | Ending Balance |
+|:----|:----|:----|:----|
+| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+
+:::
+
+:::{}
+**2026-06**
+
+```{python}
+#| echo: false
+curmonth += 1
+goals = [g for g in goals if g.month >= curmonth]
+startbal = endbal
+with plt.style.context("ggplot"):
+    plotslopes(goaldf(goals, curmonth, startbal))
+spend = sum(ym.amount for ym in goals if ym.month == curmonth)
+contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
+endbal = startbal + contrib - spend
+```
+
+| Starting Balance | Budgeted | Spent | Ending Balance |
+|:----|:----|:----|:----|
+| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+
+:::
+
+:::{}
+**2026-07**
+
+```{python}
+#| echo: false
+curmonth += 1
+goals = [g for g in goals if g.month >= curmonth]
+startbal = endbal
+with plt.style.context("ggplot"):
+    plotslopes(goaldf(goals, curmonth, startbal))
+spend = sum(ym.amount for ym in goals if ym.month == curmonth)
+contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
+endbal = startbal + contrib - spend
+```
+
+| Starting Balance | Budgeted | Spent | Ending Balance |
+|:----|:----|:----|:----|
+| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+
+:::
+
+:::{}
+**2026-08**
+
+```{python}
+#| echo: false
+curmonth += 1
+goals = [g for g in goals if g.month >= curmonth]
+startbal = endbal
+with plt.style.context("ggplot"):
+    plotslopes(goaldf(goals, curmonth, startbal))
+spend = sum(ym.amount for ym in goals if ym.month == curmonth)
+contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
+endbal = startbal + contrib - spend
+```
+
+| Starting Balance | Budgeted | Spent | Ending Balance |
+|:----|:----|:----|:----|
+| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+
+:::
+
+:::{}
+**2026-09**
+
+```{python}
+#| echo: false
+curmonth += 1
+goals = [g for g in goals if g.month >= curmonth]
+startbal = endbal
+with plt.style.context("ggplot"):
+    plotslopes(goaldf(goals, curmonth, startbal))
+spend = sum(ym.amount for ym in goals if ym.month == curmonth)
+contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
+endbal = startbal + contrib - spend
+```
+
+| Starting Balance | Budgeted | Spent | Ending Balance |
+|:----|:----|:----|:----|
+| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+
+:::
+
+:::{}
+**2026-10**
+
+```{python}
+#| echo: false
+curmonth += 1
+goals = [g for g in goals if g.month >= curmonth]
+startbal = endbal
+with plt.style.context("ggplot"):
+    plotslopes(goaldf(goals, curmonth, startbal))
+spend = sum(ym.amount for ym in goals if ym.month == curmonth)
+contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
+endbal = startbal + contrib - spend
+```
+
+| Starting Balance | Budgeted | Spent | Ending Balance |
+|:----|:----|:----|:----|
+| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+
+:::
 
 ## How This Approach is Optimal
 
 We previously said that the best path of contributions would have the smallest and most consistent contributions. We'll translate this into a minimax criterion: a series of contributions is best if it has the smallest maximum contribution over all months compared to any other acceptable series of contributions.
+
+@fig-possible-paths compares the path created by the proposed algorithm to both the naïve algorithm and the current behavior of Actual Budget for @exm-multiple-by. Both other algorithms have at least one month in which they are contributing more than the maximum of \$120 in the proposed algorithm. This comparison is also shown in @fig-contributions.
 
 ```{python}
 #| echo: false
