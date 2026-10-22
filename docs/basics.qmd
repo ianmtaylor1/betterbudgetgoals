@@ -197,14 +197,18 @@ plt.show()
 
 So far we've only been talking about the first month's contribution, but how will the rest of the months go? Will [Algorithm @alg-basic] actually send us on the desired path as we continue? To see, we'll walk through @exm-multiple-by over all months.
 
-:::{}
-**2026-04**
+:::{.panel-tabset}
 
-From @tbl-basic-multiple-by, we know the contribution for this month will be \$120, resulting in the following state:
+#### 2026-04
 
-| Starting Balance | Budgeted | Spent | Ending Balance |
-|:----|:----|:----|:----|
-| \$100.00 | \$120.00 | \$0.00 | \$220.00 |
+From @tbl-basic-multiple-by and @fig-slopes, we know the contribution for this month will be \$120, resulting in the following state:
+
+```
+  $ 100.00 Starting Balance
++ $ 120.00 Budgeted
+- $   0.00 Spent
+= $ 220.00 Ending Balance
+```
 
 ```{python}
 #| include: false
@@ -214,10 +218,8 @@ curmonth = startmonth
 endbal = 220
 ```
 
-:::
 
-:::{}
-**2026-05**
+#### 2026-05
 
 ```{python}
 #| echo: false
@@ -231,14 +233,17 @@ contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
 endbal = startbal + contrib - spend
 ```
 
-| Starting Balance | Budgeted | Spent | Ending Balance |
-|:----|:----|:----|:----|
-| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+In May, we start with the increased balance of the end of April. As a result, all of the cumulative targets are correspondingly lower. But because we are also starting one month later, the maximum required contribution is still \$`{python} "{:>.2f}".format(contrib)`.
 
-:::
+```
+  $`{python} Markdown("{:>7.2f}".format(startbal))` Starting Balance
++ $`{python} Markdown("{:>7.2f}".format(contrib))` Budgeted
+- $`{python} Markdown("{:>7.2f}".format(spend))` Spent
+= $`{python} Markdown("{:>7.2f}".format(endbal))` Ending Balance
+```
 
-:::{}
-**2026-06**
+
+#### 2026-06
 
 ```{python}
 #| echo: false
@@ -252,14 +257,17 @@ contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
 endbal = startbal + contrib - spend
 ```
 
-| Starting Balance | Budgeted | Spent | Ending Balance |
-|:----|:----|:----|:----|
-| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+By June, we've accumulated enough balance in the category (\$`{python} "{:>.2f}".format(startbal)`) to satisfy the first cumulative goal of \$300. So in the figure, there is now a downward slope to that target. But once again, the maximum slope remains \$`{python} "{:>.2f}".format(contrib)`/month, so we contribute \$`{python} "{:>.2f}".format(contrib)`.
 
-:::
+```
+  $`{python} Markdown("{:>7.2f}".format(startbal))` Starting Balance
++ $`{python} Markdown("{:>7.2f}".format(contrib))` Budgeted
+- $`{python} Markdown("{:>7.2f}".format(spend))` Spent
+= $`{python} Markdown("{:>7.2f}".format(endbal))` Ending Balance
+```
 
-:::{}
-**2026-07**
+
+#### 2026-07
 
 ```{python}
 #| echo: false
@@ -273,14 +281,17 @@ contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
 endbal = startbal + contrib - spend
 ```
 
-| Starting Balance | Budgeted | Spent | Ending Balance |
-|:----|:----|:----|:----|
-| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+We've reached July, the target month of our first template, `#template 300 by 2026-07`. So in addition to our contribution, we will have spending of \$`{python} "{:>.2f}".format(spend)`. But because spending in the current month isn't considered when applying templates (even in Actual Budget's current behavior), we still base the contribution off the starting balance of \$`{python} "{:>.2f}".format(startbal)`, and the contribution is still \$`{python} "{:>.2f}".format(contrib)`.
 
-:::
+```
+  $`{python} Markdown("{:>7.2f}".format(startbal))` Starting Balance
++ $`{python} Markdown("{:>7.2f}".format(contrib))` Budgeted
+- $`{python} Markdown("{:>7.2f}".format(spend))` Spent
+= $`{python} Markdown("{:>7.2f}".format(endbal))` Ending Balance
+```
 
-:::{}
-**2026-08**
+
+#### 2026-08
 
 ```{python}
 #| echo: false
@@ -294,14 +305,17 @@ contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
 endbal = startbal + contrib - spend
 ```
 
-| Starting Balance | Budgeted | Spent | Ending Balance |
-|:----|:----|:----|:----|
-| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+In the previous month, we spent \$300. But the \$300 template is now in the past, so the balance and cumulative targets decreased by the same amount, and nothing changes relatively. The contribution is still \$`{python} "{:>.2f}".format(contrib)`, and we will spend \$`{python} "{:>.2f}".format(spend)` in this month corresponding to the `#template 400 by 2026-08` template. This is the point when the rubber band in @fig-cumulative-milestones rests on the cumulative target and bends downward, and as expected, the ending balance of this month is \$`{python} "{:>.2f}".format(endbal)`.
 
-:::
+```
+  $`{python} Markdown("{:>7.2f}".format(startbal))` Starting Balance
++ $`{python} Markdown("{:>7.2f}".format(contrib))` Budgeted
+- $`{python} Markdown("{:>7.2f}".format(spend))` Spent
+= $`{python} Markdown("{:>7.2f}".format(endbal))` Ending Balance
+```
 
-:::{}
-**2026-09**
+
+#### 2026-09
 
 ```{python}
 #| echo: false
@@ -315,14 +329,17 @@ contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
 endbal = startbal + contrib - spend
 ```
 
-| Starting Balance | Budgeted | Spent | Ending Balance |
-|:----|:----|:----|:----|
-| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+Once again, the spending and the template passing have cancelled out, and we continue on to the next target as if nothing changed. Now that there is only one target left and we are starting from zero balance, the proposed algorithm behaves exactly like normal Actual Budget behavior.
 
-:::
+```
+  $`{python} Markdown("{:>7.2f}".format(startbal))` Starting Balance
++ $`{python} Markdown("{:>7.2f}".format(contrib))` Budgeted
+- $`{python} Markdown("{:>7.2f}".format(spend))` Spent
+= $`{python} Markdown("{:>7.2f}".format(endbal))` Ending Balance
+```
 
-:::{}
-**2026-10**
+
+#### 2026-10
 
 ```{python}
 #| echo: false
@@ -336,11 +353,19 @@ contrib = contribution_amounts(goals, [], curmonth, {cat:startbal}, [])[0][cat]
 endbal = startbal + contrib - spend
 ```
 
-| Starting Balance | Budgeted | Spent | Ending Balance |
-|:----|:----|:----|:----|
-| `{python} "${:.2f}".format(startbal)` | `{python} "${:.2f}".format(contrib)` | `{python} "${:.2f}".format(spend)` | `{python} "${:.2f}".format(endbal)` |
+In the final month, we contribute \$`{python} "{:>.2f}".format(contrib)` more to meet the final \$`{python} "{:>.2f}".format(spend)` goal, spend it, and end at zero balance.
+
+```
+  $`{python} Markdown("{:>7.2f}".format(startbal))` Starting Balance
++ $`{python} Markdown("{:>7.2f}".format(contrib))` Budgeted
+- $`{python} Markdown("{:>7.2f}".format(spend))` Spent
+= $`{python} Markdown("{:>7.2f}".format(endbal))` Ending Balance
+```
 
 :::
+
+This entire process, just like current Actual Budget behavior, is memoryless. No information besides the current category balance and the goal month and amount of the templates was ever used in calculating the contribution amount. If at any point, there had been unexpected contributions or spending from the category, the algorithm would automatically adjust moving forward (flattening or steepening the rubber band, respectively, resulting in smaller or larger contributions).
+
 
 ## How This Approach is Optimal
 
@@ -358,3 +383,5 @@ with plt.style.context("ggplot"):
 plt.show()
 
 ```
+
+In fact, this will always be the case, and any other series of contributions which meets all of the goals will have at least one month in which it has a higher contribution amount than the maximum required by the proposed algorithm. @fig-possible-paths makes this easy to see. Any acceptable series of contributions will have to create a path that passes through or over the second target. If it passes above that target, the average slope of the line it creates will be greater than 120, so some month necessarily will have a contribution greater than 120. If it passes through the second target, but not in a straight line, then even though the average monthly contribution is 120, some months will have lower contributions and some months will have higher contributions. So the only path which has a maximum slope (and a maximum contribution amount) of 120 is the path that goes in a straight line from the start to the second target.

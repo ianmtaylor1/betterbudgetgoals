@@ -1,6 +1,8 @@
 
 # Filling in the Details {#sec-details}
 
+With a simplified case understood, and some key metaphors and visuals for understanding the process, we can start to add back in features until we have parity with the current Actual Budget algorithm.
+
 ## Gradual and Immediate Templates
 
 ### Translating Templates {.unnumbered}
