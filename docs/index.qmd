@@ -40,7 +40,7 @@ flowchart LR
 
 ## Background
 
-In Actual Budget, [templates](https://actualbudget.org/docs/experimental/goal-templates) are tools to automate your contributions to spending categories each month. Most are pretty straightforward. For example, `#template 50` will budget \$50 in a category each month, and `#template average 12 months` will budget equal to a category's average spending over the previous 12 months. Both of these examples, like most templates, prescribe a specific amount to be budgeted. But there are other templates that work differently. The template `#template 500 by 2027-02` will aim to build up a \$500 balance in the category by February of 2027. The template `#template schedule Car Insurance` will work similarly, but will take its amount and date from an upcoming scheduled transaction called "Car Insurance."
+In Actual Budget, [templates](https://actualbudget.org/docs/experimental/goal-templates) are tools to automate your contributions to spending categories each month. Most are pretty straightforward. For example, `#template 50` will budget \$50 in a category each month, and `#template average 12 months` will budget equal to a category's average spending over the previous 12 months. Both of these examples, like most templates, prescribe a specific amount to be budgeted. But there are other templates that work differently. The template `#template 500 by 2027-02` will aim to build up a \$500 balance in the category by February of 2027. The template `#template schedule Car Insurance` will work similarly, but will take its amount and date from an upcoming scheduled transaction called "Car Insurance." These long-term templates are meant to graudally save up a specific amount for a future expense.
 
 The most intuitive way to save up for a future expense is to calculate how much you will need to save monthly at the start, then save that much each month. We'll call this the *naïve* method.^["Naïve" here is used in the academic sense---the simplest, most obvious approach.]
 
@@ -209,10 +209,11 @@ This series of contributions is produced by the algorithm proposed in the rest o
 
 1. It tries to match the behavior of the existing template algorithm in all scenarios except when there are multiple long-term templates in one budget file.
 2. It maintains the memorylessness of Actual Budget templates, and requires no new information to be stored in the database.
+3. It is extendable to template types that may be added in the future.
 
 But it also makes several improvements:
 
 1. The maximum amount required to be withdrawn from available funds over the lifetime of the templates is lower than in any other algorithm.
 2. The algorithm allows for `by`-type templates in the same category to have different priorities.
-3. The algorithm is extendable to template types that may be added in the future.
+
 

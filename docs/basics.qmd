@@ -81,7 +81,7 @@ def plotslopes(df: pd.DataFrame):
 
 ```
 
-To understand the basics of the proposed algorithm we'll start with a simplified case: multiple `by`-type templates in a single category, no repeating, no other templates, no priorities, and no `spend from` clauses. Then we'll build back in these other details in the next section. 
+To understand the basics of the proposed algorithm we'll start with a simplified case: multiple `by`-type templates in a single category, no repeating, no other templates, no priorities, and no `spend from` clauses. Then we'll build back in these other details in the next @sec-details. 
 
 ## Simplified Algorithm
 
