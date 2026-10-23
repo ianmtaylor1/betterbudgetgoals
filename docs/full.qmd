@@ -1,2 +1,39 @@
 
 # Full Algorithm and Reference Code {#sec-full}
+
+```{python}
+#| include: false
+
+import inspect
+from betterbudgetgoals.month import YearMonth
+from betterbudgetgoals.algo import GradualGoal, ImmediateGoal
+from IPython.display import Markdown
+```
+
+## Reference Code
+
+### Classes
+
+:::{.callout-note appearance="minimal" collapse=true}
+#### YearMonth
+
+```{.python}
+`{python} Markdown(inspect.getsource(YearMonth))`
+```
+:::
+
+:::{.callout-note appearance="minimal" collapse=true}
+#### GradualGoal
+
+```{.python}
+`{python} Markdown(inspect.getsource(GradualGoal))`
+```
+:::
+
+:::{.callout-note appearance="minimal" collapse=true}
+#### ImmediateGoal
+
+```{.python}
+`{python} Markdown(inspect.getsource(ImmediateGoal))`
+```
+:::
