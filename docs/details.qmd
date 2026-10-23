@@ -7,7 +7,7 @@ With a simplified case understood, and some key metaphors and visuals for unders
 
 ### Translating Templates {.unnumbered}
 
-So far, we've just been talking about Gradual and Immediate templates, but these are not the terms used by Actual Budget. We need a system to translate the Actual Budget-native template types to either Gradual or Immediate for use in this algorithm
+So far, we've just been talking about Gradual and Immediate templates, but these are not the terms used by Actual Budget. We need a system to translate the Actual Budget-native template types to either Gradual or Immediate for use in this algorithm.
 
 ::::: {.columns}
 ::: {.column}
@@ -35,13 +35,13 @@ Remainder Type templates are considered separately, after all other templates ha
 
 ## Priorities
 
-So far, the algorithm works with groups of templates as a whole, not individual templates. Specifically for long-term templates, it's not possible to work out the contribution due to one template or another. So to implement priorities we need to work backwards. If $T_1,\dots,T_n$ are templates sorted in order of priority, and $C(\dots)$ is the function that returns the total contribution required by a specific set of templates, then the incremental effect of the last template is given by
+So far, the algorithm works with groups of templates as a whole, not individual templates. Specifically for long-term templates, it's not possible to work out the contribution due to one template or another. So to implement priorities we need to work backwards. If $T_1,\dots,T_n$ are templates sorted in order of priority, and $C(\dots)$ is the function that returns the total contribution required by a specific set of templates, then the incremental effect of the last template, $T_n$, is given by the difference between the contribution amounts with and without $T_n$.
 
 $$C(T_1,\dots,T_{n-1},T_n) - C(T_1,\dots,T_{n-1}),$$ {#eq-priorities-generic}
 
-the difference between the contribution amounts with and without $T_n$. This idea is pretty flexible, and can be used for any function $C$, not just this specific algorithm. So different long-term templates in the same category can be given different priorities, and the incremental effect of each template can be found easily.
+This idea is pretty flexible, and can be used for any function $C$, not just this specific algorithm. So different long-term templates in the same category can be given different priorities, and the incremental effect of each template can be found easily. When working with templates of different priorities, we can continue until we reach a $n^\ast$ where $C(T_1,\dots,T_{n^\ast})$ is greater than the available funds to spend, at which point $T_{n^\ast-1}$ is the last template to succeed, $T_{n^\ast}$ could partially succeed, and any $T_n$ with $n > n^\ast$ will fail.
 
-One thing that is a little weird about this approach is that the amount contributed due to a template could be different depending on its position in the priority order. For example in @exm-multiple-by, if the last template, `#template 100 by 2026-10` is the highest priority template, then it is responsible for \$14.29 of contribution. But if it is the lowest priority template, then it is responsible for \$0 of contribution. But the total contribution from all three templates is the same no matter the priority order of the templates. So if you have \$120 of available funds, all three templates will succeed no matter their order. But if you have less than \$120, the priority order would affect which templates succeed and which fail.
+One thing that is a little weird about this approach is that the amount contributed due to a template could be different depending on its position in the priority order. For example in @exm-multiple-by, if the last template, `#template 100 by 2026-10` is the highest priority template, then it is responsible for \$14.29 of contribution. But if it is the lowest priority template, then it is responsible for \$0 of contribution. But the total contribution from all three templates is the same no matter the priority order of the templates. So if you have \$120 of available funds, all three templates will succeed no matter their order. But if you have less than \$120, the priority order would affect which templates succeed and which fail, as expected.
 
 ## Spend From
 
