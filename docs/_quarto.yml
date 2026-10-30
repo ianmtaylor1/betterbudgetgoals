@@ -12,7 +12,8 @@ book:
     - details.qmd
     - full.qmd
   appendices:
-    - appendix.qmd
+    - appendix/reproducing.qmd
+    - appendix/alternatives.qmd
 
 
 format:
