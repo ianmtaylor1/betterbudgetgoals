@@ -1,4 +1,18 @@
 
+```{python}
+#| label: setup
+#| include: false
+
+import pandas as pd
+from IPython.display import Markdown
+from tabulate import tabulate
+import matplotlib.pyplot as plt
+
+from betterbudgetgoals.month import YearMonth
+from betterbudgetgoals.algo import GradualGoal, ImmediateGoal, contribution_amounts
+
+```
+
 # Filling in the Details {#sec-details}
 
 With a simplified case understood, and some key metaphors and visuals for understanding the process, we can start to add back in features until we have parity with the current Actual Budget algorithm.
@@ -7,11 +21,142 @@ With a simplified case understood, and some key metaphors and visuals for unders
 
 Not all templates are of the gradual type. Most specify an amount to add to the budget in this month, not a target balance for a future date. We'll call these Immediate templates to contrast with the Gradual templates. No complicated math is needed to determine the contribution amount for an immedaite template, but we have to be careful when combining gradual and immedate in the same category or we could lose the desireable properties we want the algorithm to have.
 
-The approach we'll take is to first apply the gradual templates, then the immediate templates. 
+Because all gradual templates are processed together, the immediate templates need to either be processed before or after the gradual templates. The approach we'll take is to first apply the gradual templates, then the immediate templates. The assumption that underlies this is that Immediate templates are for anticipated spending in the current month, in contrast to Gradual Templates which are for anticipated spending in a future month. So when we compare the two orderings, we will have each month with an immediate template as having corresponding spending. We will use @exm-multiple-by-with-simple to compare the two orderings.
 
-[Why? Immediate templates come with the assumption of spending in that month. When applying after, we get consistent contributions and the immediate templates/spending kind of "cancel out" on top of it. Show example and table. Refer to appendix for alternative.]{style="color:red;"}
+::: {#exm-multiple-by-with-simple}
 
-### Translating Templates {.unnumbered}
+*Multiple `by`-type templates and `simple`-type templates mixed.*
+
+It's the beginning of April of 2026. You have a \$100 balance in a spending category carried over from March. There are three upcoming expenses in that category you want to save up for:
+
+- In July, you need to pay \$300.
+- In August, you need to pay \$400.
+- In October, you need to pay \$100.
+
+Additionally, every month you anticipate \$50 of regular monthly spending in this category.
+
+To prepare for these expenses, you add the following four templates to the category:
+
+```
+#template 50
+#template 300 by 2026-07
+#template 400 by 2026-08
+#template 100 by 2026-10
+```
+:::
+
+@tbl-gradual-before-immediate and @tbl-immediate-before-gradual show each option for the ordering: Gradual before Immediate and Immediate before Gradual, respectively.
+
+:::{.panel-tabset}
+
+#### Gradual Before Immediate
+
+```{python}
+#| label: tbl-gradual-before-immediate
+#| echo: false
+#| tbl-cap: "TBD"
+
+startmonth = YearMonth(2026,4)
+startbalance = 100
+
+better = pd.DataFrame(
+    {"Month":[startmonth + i for i in range(7)],
+    "Budgeted":[0.0] * 7,
+    "Spent":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0],
+    "Balance": [0.0] * 7}
+)
+better["Spent"] += 50
+
+gradual_goals = [
+    GradualGoal(YearMonth(2026,7), 300, "spending"),
+    GradualGoal(YearMonth(2026,8), 400, "spending"),
+    GradualGoal(YearMonth(2026,10), 100, "spending")
+]
+immediate_goals = [
+    ImmediateGoal(50, "spending")
+]
+
+balance = startbalance
+for i in range(better.shape[0]):
+    month = better.loc[i,"Month"]
+    contrib = contribution_amounts(
+        [g for g in gradual_goals if g.month >= month], 
+        immediate_goals, 
+        month, 
+        {"spending":balance},
+        []
+    )[0]["spending"]
+    better.loc[i,"Budgeted"] = contrib
+    balance += contrib - better.loc[i,"Spent"]
+    better.loc[i,"Balance"] = balance
+
+
+Markdown(tabulate(better, headers="keys", showindex=False, floatfmt=".2f"))
+
+```
+
+[What's going on here? It's the same as @tbl-better except with an extra \$50 contributed and \$50 spent every month. The spending in the month immediately kind of "cancels out" the extra contribution, as expected. Balances stay the same. This is pretty much what we would want.]{style="color: red;"}
+
+#### Immediate Before Gradual
+
+```{python}
+#| label: tbl-immediate-before-gradual
+#| echo: false
+#| tbl-cap: "TBD"
+
+startmonth = YearMonth(2026,4)
+startbalance = 100
+
+better = pd.DataFrame(
+    {"Month":[startmonth + i for i in range(7)],
+    "Budgeted":[0.0] * 7,
+    "Spent":[0.0, 0.0, 0.0, 300.0, 400.0, 0.0, 100.0],
+    "Balance": [0.0] * 7}
+)
+better["Spent"] += 50
+
+gradual_goals = [
+    GradualGoal(YearMonth(2026,7), 300, "spending"),
+    GradualGoal(YearMonth(2026,8), 400, "spending"),
+    GradualGoal(YearMonth(2026,10), 100, "spending")
+]
+immediate_goals = [
+    ImmediateGoal(50, "spending")
+]
+
+balance = startbalance
+for i in range(better.shape[0]):
+    month = better.loc[i,"Month"]
+    # Hack together the wrong order
+    pre_contrib = contribution_amounts(
+        [], 
+        immediate_goals, 
+        month, 
+        {"spending":balance},
+        []
+    )[0]["spending"]
+    balance += pre_contrib
+    post_contrib = contribution_amounts(
+        [g for g in gradual_goals if g.month >= month], 
+        [], 
+        month, 
+        {"spending":balance},
+        []
+    )[0]["spending"]
+    better.loc[i,"Budgeted"] = pre_contrib + post_contrib
+    balance += post_contrib - better.loc[i,"Spent"]
+    better.loc[i,"Balance"] = balance
+
+
+Markdown(tabulate(better, headers="keys", showindex=False, floatfmt=".2f"))
+
+```
+
+[What's going on here? Compared to @tbl-gradual-before-immediate, there is less contribution each month, and we end up overdrawn twice. Why? Because the immediate is done first, thereby changing the balance used for the gradual, reducing the contributions of the gradual. In the "pivot" month, we add \$50 for immediate. Then the graudal fills in the missing amount *only up to the balances required by the gradual*, so we don't have enough balance for both the immediate and gradual.]{style="color: red;"}
+
+:::
+
+### Translating Templates
 
 So far, we've just been talking about Gradual and Immediate templates, but these are not the terms used by Actual Budget. We need a system to translate Actual Budget's template types to either Gradual or Immediate for use in this algorithm.
 
@@ -36,6 +181,10 @@ So far, we've just been talking about Gradual and Immediate templates, but these
 :::::
 
 Remainder Type templates are considered separately, after all other templates have run, as they are now. Limits on categories (i.e. `up to`) function the same as they do now, also.
+
+[Give some examples of how these are translated]{style="color: red;"}
+
+One advantage of this translation layer is it is flexible enough to accomodate future template types in Actual Budget, as long as they can be translated into Gradual, Immediate, and Limits. Additionally, simplifying the templates like this allows for natural mixing of different template types, particularly those that are translated into Gradual templates. So if there are schedule and by-type templates in the same budget, those will work together naturally and don't require special handling.
 
 ## Repeating Gradual Templates
 
