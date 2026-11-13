@@ -45,16 +45,13 @@ To prepare for these expenses, you add the following four templates to the categ
 ```
 :::
 
-@tbl-gradual-before-immediate and @tbl-immediate-before-gradual show each option for the ordering: Gradual before Immediate and Immediate before Gradual, respectively.
+@tbl-gradual-before-immediate and @tbl-immediate-before-gradual show the results of each option for the ordering: Gradual before Immediate and Immediate before Gradual, respectively.
 
-:::{.panel-tabset}
-
-#### Gradual Before Immediate
 
 ```{python}
 #| label: tbl-gradual-before-immediate
 #| echo: false
-#| tbl-cap: "TBD"
+#| tbl-cap: "The resulting budgeted amounts, spending, and category balance from applying Gradual templates before applying Immediate templates in @exm-multiple-by-with-simple."
 
 startmonth = YearMonth(2026,4)
 startbalance = 100
@@ -95,14 +92,12 @@ Markdown(tabulate(better, headers="keys", showindex=False, floatfmt=".2f"))
 
 ```
 
-[What's going on here? It's the same as @tbl-better except with an extra \$50 contributed and \$50 spent every month. The spending in the month immediately kind of "cancels out" the extra contribution, as expected. Balances stay the same. This is pretty much what we would want.]{style="color: red;"}
-
-#### Immediate Before Gradual
+The numbers in @tbl-gradual-before-immediate are the exact same as @exm-multiple-by and @tbl-better except with an extra \$50 contributed and \$50 spent every month. There's always enough money in the account for all of the smaller monthly and larger long-term expenses, and the contribution amounts are just as consistent as before the immediate template was added. Why is this the case? In the first month, because gradual templates are added first the situation when applying the Gradual templates is exactly as it is for @exm-multiple-by. Then, the immediate template amounts don't depend on current balances or goals, so \$50 is simply added on top. Then by the end of the month, \$50 is spent again, "canceling out" with the immediate template contribution. In the second month, we are right back to the baseline for @exm-multiple-by again. The algorithm will automatically adjust as before, too. If in one month, the monthly expenses end up being \$40 instead of the expected \$50, it's the same as if you unexpectedly put an extra \$10 in the account, and the contributions for the gradual templates will adjust going forward.
 
 ```{python}
 #| label: tbl-immediate-before-gradual
 #| echo: false
-#| tbl-cap: "TBD"
+#| tbl-cap: "The resulting budgeted amounts, spending, and category balance from applying Immediate templates before applying Gradual templates in @exm-multiple-by-with-simple."
 
 startmonth = YearMonth(2026,4)
 startbalance = 100
@@ -152,9 +147,7 @@ Markdown(tabulate(better, headers="keys", showindex=False, floatfmt=".2f"))
 
 ```
 
-[What's going on here? Compared to @tbl-gradual-before-immediate, there is less contribution each month, and we end up overdrawn twice. Why? Because the immediate is done first, thereby changing the balance used for the gradual, reducing the contributions of the gradual. In the "pivot" month, we add \$50 for immediate. Then the graudal fills in the missing amount *only up to the balances required by the gradual*, so we don't have enough balance for both the immediate and gradual.]{style="color: red;"}
-
-:::
+@tbl-immediate-before-gradual is notably different from @tbl-gradual-before-immediate. There is less contribution each month, and we end up overdrawn twice. Why does this happen? Because the immediate tempaltes are applied first, the baseline balance used for the gradual templates is artifically increased, reducing the contributions of the gradual templates. In the "pivot" month, 2026-08, we add \$50 for immediate template and the graudal templates fill in the missing amount *only up to the balances required by the gradual templates*, so we don't have enough balance for both the immediate \$50 spending and gradual \$400 spending.
 
 ### Translating Templates
 
